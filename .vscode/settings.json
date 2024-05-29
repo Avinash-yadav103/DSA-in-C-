@@ -3,6 +3,10 @@
         "ostream": "cpp",
         "iostream": "cpp",
         "xlocale": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "initializer_list": "cpp",
+        "type_traits": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
     }
 }
