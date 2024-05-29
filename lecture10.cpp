@@ -45,6 +45,16 @@ int repeatingNum(int arr[], int size){
     return x;
 }
 
+int findDuplicate(int arr[], int size){
+    int ans=0;
+    for(int i=0; i<size;i++){
+        ans = ans^arr[i];
+    }
+    for(int i=0;i<size;i++){
+        ans = ans^i;
+    }
+    return ans;
+}
 
 int main(){
 
@@ -60,8 +70,11 @@ int main(){
     // cout<<endl;
     // cout<<gettingUniqueNum(mirror, 7)<<endl;
     // PrintingArray(mirror,7);
-    int arr[5] ={5,2,3,4,7};
-    cout<<repeatingNum(arr,5);
+    int arr[6] ={1,2,3,5,4,5};
+    // cout<<repeatingNum(arr,5);
+    cout<<findDuplicate(arr,6);
 
     return 0;
 }
+
+
