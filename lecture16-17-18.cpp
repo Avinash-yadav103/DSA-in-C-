@@ -44,6 +44,19 @@ void bubbleSort(int arr[] ,int n){
 
 void insertionSort(int arr[] ,int n){
     
+    for(int i= 1;i<n;i++){
+        int temp = arr[i];
+        int j =i-1;
+        for (;j>=0;j--){
+            if(arr[j]>temp){
+                arr[j+1] = arr[j];  
+            }
+            else{
+                break;
+            }
+        }
+        arr[j+1] =temp;
+    }
 }
 
 void printingArray(int arr[], int n){
@@ -58,8 +71,11 @@ int main(){
     int qw[5] = {64,25,12,22,11};
     selectionSort(qw,5);
     printingArray(qw,5);
+    int kw[5] = {65,26,5,62,11};
+    bubbleSort(kw,5);
+    printingArray(kw,5);
     int cw[5] = {65,25,12,22,11};
-    bubbleSort(cw,5);
+    insertionSort(cw,5);
     printingArray(cw,5);
 
     return 0;
