@@ -128,7 +128,6 @@ int deq(){
     dq.swap(dq);
     //To insert element at 2nd index
     dq.emplace(dq.begin()+2,8);
-
 }
 
 int qu(){
