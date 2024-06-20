@@ -72,6 +72,7 @@ void mergesortedArray(int arr1[], int n ,int arr2[], int m,int arr3[]){
     }
 }
 
+// Leetcode folder me
 // vector<int> mergesortedVectors(){
     
 // }
@@ -88,7 +89,19 @@ void moveZeroes(int nums[],int n){
     }
 }
 
+vector<int> rotate(vector<int>& nums, int k){
 
+    for(int i =0; i<nums.size()-1;i++){
+        swap(nums[i],nums[k]);
+        if(k<nums.size()){
+            k++;
+        }
+        else{
+            break;
+        }
+    }
+    return nums;
+}
 
 int main(){
     // int arr[] = {1,2,3,4,5};
@@ -105,9 +118,15 @@ int main(){
     // mergesortedArray(array1,5,array2,4,array3);
     // printingArray(array3,9);
     // cout<<"hellp";
-    int arr[] ={0,1,0,4,0,3};
-    moveZeroes(arr,6);
-    printingArray(arr,6);
+
+    // int arr[] ={0,1,0,4,0,3};
+    // moveZeroes(arr,6);
+    // printingArray(arr,6);
+
+    vector<int> nums = {5,9,7,6,3};
+    rotate(nums,2);
+    // vector<int> ans = nums;
+    printingVec(nums);
 }
 
 
