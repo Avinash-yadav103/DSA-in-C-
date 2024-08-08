@@ -1,4 +1,5 @@
 #include<iostream>
+#include<vector>
 using namespace std;
 
 char toLowerCase(char name){
@@ -70,6 +71,26 @@ string reversedStr(string s){
     return s;
 }
 
+vector<char> Hello(vector<char> ch){
+    // int s = 0;
+
+    // for(int i=0;i<ch.size()-1;i++){
+        
+    //     if(ch[i]=='\0'){
+    //         int e = i;
+    //         while(s<e){
+    //             swap(s++,e--);
+    //         }
+    //     }
+    //     int s = i;
+    // }
+
+    // return ch;
+
+    
+}
+
+
 int main(){
     string th = "This is my name avinash";
     cout<<reversedStr(th);
@@ -91,6 +112,8 @@ int main(){
     // cout<< name <<endl;
 
     // cout <<"Palidrome or not: "<< palindrome(name , len);
+
+
 
     return 0;
 }
