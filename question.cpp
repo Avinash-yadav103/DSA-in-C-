@@ -96,7 +96,7 @@ public:
                 refptr = refptr->next;
             }
 
-            cout << "The"<<n<< "th node from the end is"<< main_ptr->data << endl;
+            cout << "The"<<n<< "th node from the end is"<< main_ptr->data<< " ,"<< main_ptr->secret << endl;
         }
     }
 };

@@ -65,27 +65,27 @@ vector<int> mergeTwosortedVec(vector<int>& nums1, int m, vector<int> nums2, int 
 
 
     int i =0;
-            int j= 0;
-            vector<int> v = nums1;
-            nums1.clear();
-            while(i<m && j<n){
-                if(v[i]<nums2[j]){
-                    nums1.push_back(v[i]);
-                    i++;
-                }
-                else{
-                    nums1.push_back(nums2[j]);
-                    j++;
-                }
-            }
-            while(i<n){
+        int j= 0;
+        vector<int> v = nums1;
+        nums1.clear();
+        while(i<m && j<n){
+            if(v[i]<nums2[j]){
                 nums1.push_back(v[i]);
                 i++;
             }
-            while(j<m){
+            else{
                 nums1.push_back(nums2[j]);
                 j++;
             }
+        }
+        while(i<n){
+            nums1.push_back(v[i]);
+            i++;
+        }
+        while(j<m){
+            nums1.push_back(nums2[j]);
+            j++;
+        }
 
     return nums1; 
 }
