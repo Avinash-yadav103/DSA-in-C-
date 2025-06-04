@@ -30,13 +30,13 @@ int main() {
     
     // Example test cases
     vector<int> prices1 = {7, 1, 5, 3, 6, 4};
-    cout << "Max profit for prices1: " << solution.maxProfit(prices1) << endl; // Expected: 5
+    cout << "Max profit for prices1: " << solution.maxProfit(prices1) << endl; 
     
     vector<int> prices2 = {7, 6, 4, 3, 1};
-    cout << "Max profit for prices2: " << solution.maxProfit(prices2) << endl; // Expected: 0
+    cout << "Max profit for prices2: " << solution.maxProfit(prices2) << endl; 
     
     vector<int> prices3 = {2, 4, 1};
-    cout << "Max profit for prices3: " << solution.maxProfit(prices3) << endl; // Expected: 2
+    cout << "Max profit for prices3: " << solution.maxProfit(prices3) << endl;
     
     return 0;
 }
