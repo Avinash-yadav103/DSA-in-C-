@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.ejs": "html",
         "ostream": "cpp",
         "iostream": "cpp",
         "xlocale": "cpp",
@@ -48,6 +49,7 @@
         "xtr1common": "cpp",
         "stack": "cpp",
         "queue": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "set": "cpp"
     }
 }
