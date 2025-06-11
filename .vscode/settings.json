@@ -50,6 +50,7 @@
         "stack": "cpp",
         "queue": "cpp",
         "map": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "xhash": "cpp"
     }
 }
