@@ -18,8 +18,22 @@ public:
             else{
                 e = mid -1;
             }
-
         }
-        // return mid;
+        return -1; // Return -1 if the target is not found
     }
 };
+
+int main() {
+    Solution solution;
+    vector<int> nums = {-1, 0, 3, 5, 9, 12};
+    int target = 9;
+
+    int result = solution.search(nums, target);
+    if (result != -1) {
+        cout << "Target found at index: " << result << endl;
+    } else {
+        cout << "Target not found" << endl;
+    }
+
+    return 0;
+}
