@@ -51,6 +51,16 @@
         "queue": "cpp",
         "map": "cpp",
         "set": "cpp",
-        "xhash": "cpp"
+        "xhash": "cpp",
+        "charconv": "cpp",
+        "format": "cpp",
+        "locale": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "xlocbuf": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xloctime": "cpp",
+        "xtree": "cpp"
     }
 }
