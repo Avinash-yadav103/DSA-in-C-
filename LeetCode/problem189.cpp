@@ -20,7 +20,7 @@ vector<int> rotate(vector<int>& nums, int k) {
         temp[(i+k)%nums.size()] = nums[i];
 
     }
-    nums =temp;
+    nums = temp;
 }
 
 void printingVec(vector<int> v){
