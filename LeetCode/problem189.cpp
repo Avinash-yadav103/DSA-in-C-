@@ -21,7 +21,7 @@ vector<int> rotate(vector<int>& nums, int k) {
 
     }
     nums = temp;
-}
+} 
 
 void printingVec(vector<int> v){
     for(int i=0;i<v.size();i++){
