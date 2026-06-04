@@ -1,8 +1,7 @@
 from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
     PageBreak, HRFlowable, KeepTogether
@@ -10,7 +9,7 @@ from reportlab.platypus import (
 from reportlab.platypus.flowables import Flowable
 from reportlab.lib.colors import HexColor, white, black
 
-# ─── Palette ─────────────────────────────────────────────────
+# ─── Palette ──────────────────────────────────────────────────
 NAVY      = HexColor("#1A3C5E")
 BLUE      = HexColor("#2E75B6")
 TEAL      = HexColor("#1F7A8C")
@@ -24,1486 +23,1618 @@ TEAL_BG   = HexColor("#E0F2F5")
 GREEN_BG  = HexColor("#E6F4EE")
 PURPLE_BG = HexColor("#F0EAF8")
 ORANGE_BG = HexColor("#FEF0E6")
+RED_BG    = HexColor("#FDEDEC")
+GOLD_BG   = HexColor("#FEF9E7")
 CODE_BG   = HexColor("#0D1117")
-CODE_HEADER = HexColor("#161B22")
+CODE_HDR  = HexColor("#161B22")
 ALT_ROW   = HexColor("#F2F7FC")
 BORDER    = HexColor("#CBD5E1")
 DARK      = HexColor("#1E293B")
 MUTED     = HexColor("#64748B")
-CPP_KW    = HexColor("#FF7B72")   # red  – keywords
-CPP_TYPE  = HexColor("#79C0FF")   # blue – types
-CPP_CMT   = HexColor("#8B949E")   # grey – comments
-CPP_STR   = HexColor("#A5D6FF")   # light blue – strings
-CPP_NUM   = HexColor("#F8C83A")   # yellow – numbers
-CPP_FN    = HexColor("#D2A8FF")   # purple – function names
-CODE_FG   = HexColor("#E6EDF3")   # default text
+CPP_KW    = HexColor("#FF7B72")
+CPP_TYPE  = HexColor("#79C0FF")
+CPP_CMT   = HexColor("#8B949E")
+CPP_STR   = HexColor("#A5D6FF")
+CPP_NUM   = HexColor("#F8C83A")
+CODE_FG   = HexColor("#E6EDF3")
 
 W, H = A4
 
-# ─── Header / Footer ─────────────────────────────────────────
-def first_page(c, doc):
-    _draw_chrome(c, doc)
-
-def later_pages(c, doc):
-    _draw_chrome(c, doc)
-
-def _draw_chrome(c, doc):
+# ─── Chrome ───────────────────────────────────────────────────
+def _chrome(c, doc):
     c.saveState()
-    # Header
-    c.setFillColor(NAVY)
-    c.rect(0, H - 26*mm, W, 26*mm, fill=1, stroke=0)
-    # Accent stripe
-    c.setFillColor(TEAL)
-    c.rect(0, H - 28*mm, W, 2*mm, fill=1, stroke=0)
-    c.setFillColor(white)
-    c.setFont("Helvetica-Bold", 11)
-    c.drawString(15*mm, H - 16*mm, "DSA Notes — Two Pointers & Sliding Window")
+    c.setFillColor(NAVY);  c.rect(0, H-26*mm, W, 26*mm, fill=1, stroke=0)
+    c.setFillColor(TEAL);  c.rect(0, H-28*mm, W, 2*mm,  fill=1, stroke=0)
+    c.setFillColor(white); c.setFont("Helvetica-Bold", 11)
+    c.drawString(15*mm, H-16*mm, "DSA Notes — Linked List (All Types & Operations)")
     c.setFont("Helvetica", 9)
-    c.drawRightString(W - 15*mm, H - 16*mm, "Topic 2 of 13")
-    # Footer
-    c.setFillColor(NAVY)
-    c.rect(0, 0, W, 12*mm, fill=1, stroke=0)
-    c.setFillColor(TEAL)
-    c.rect(0, 12*mm, W, 1.5*mm, fill=1, stroke=0)
-    c.setFillColor(white)
-    c.setFont("Helvetica", 8)
+    c.drawRightString(W-15*mm, H-16*mm, "Topic 5 of 13")
+    c.setFillColor(NAVY);  c.rect(0, 0, W, 12*mm, fill=1, stroke=0)
+    c.setFillColor(TEAL);  c.rect(0, 12*mm, W, 1.5*mm, fill=1, stroke=0)
+    c.setFillColor(white); c.setFont("Helvetica", 8)
     c.drawString(15*mm, 4*mm, "DSA Revision Planner  •  C++ Code Edition")
-    c.drawRightString(W - 15*mm, 4*mm, f"Page {doc.page}")
+    c.drawRightString(W-15*mm, 4*mm, f"Page {doc.page}")
     c.restoreState()
 
-# ─── Custom Flowables ─────────────────────────────────────────
-class SectionBanner(Flowable):
-    def __init__(self, num, title, color=NAVY, accent=TEAL):
+first_page  = lambda c, doc: _chrome(c, doc)
+later_pages = lambda c, doc: _chrome(c, doc)
+
+# ─── Flowables ────────────────────────────────────────────────
+class Banner(Flowable):
+    def __init__(self, num, title, color=NAVY, accent=TEAL, height=14*mm):
         super().__init__()
-        self.num = num
-        self.title = title
-        self.color = color
-        self.accent = accent
-        self.width = W - 30*mm
-        self.bh = 14*mm
-
-    def wrap(self, *args):
-        return self.width, self.bh + 4*mm
-
+        self.num=num; self.title=title; self.color=color
+        self.accent=accent; self.bh=height; self.width=W-30*mm
+    def wrap(self,*a): return self.width, self.bh+4*mm
     def draw(self):
-        c = self.canv
+        c=self.canv
         c.setFillColor(self.color)
-        c.roundRect(0, 2*mm, self.width, self.bh, 3*mm, fill=1, stroke=0)
+        c.roundRect(0,2*mm,self.width,self.bh,3*mm,fill=1,stroke=0)
         c.setFillColor(self.accent)
-        c.roundRect(0, 2*mm, 10*mm, self.bh, 3*mm, fill=1, stroke=0)
-        c.rect(7*mm, 2*mm, 3*mm, self.bh, fill=1, stroke=0)
-        c.setFillColor(white)
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(13*mm, 2*mm + self.bh/2 - 1.5*mm, self.num)
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(28*mm, 2*mm + self.bh/2 - 2*mm, self.title)
-
-
-class SubBanner(Flowable):
-    def __init__(self, text, color=BLUE, bg=LIGHT):
-        super().__init__()
-        self.text = text
-        self.color = color
-        self.bg = bg
-        self.width = W - 30*mm
-        self.bh = 9*mm
-
-    def wrap(self, *args):
-        return self.width, self.bh + 3*mm
-
-    def draw(self):
-        c = self.canv
-        c.setFillColor(self.bg)
-        c.roundRect(0, 1.5*mm, self.width, self.bh, 2*mm, fill=1, stroke=0)
-        c.setFillColor(self.color)
-        c.roundRect(0, 1.5*mm, 4*mm, self.bh, 1.5*mm, fill=1, stroke=0)
-        c.rect(2*mm, 1.5*mm, 2*mm, self.bh, fill=1, stroke=0)
-        c.setFillColor(self.color)
-        c.setFont("Helvetica-Bold", 11)
-        c.drawString(8*mm, 1.5*mm + self.bh/2 - 2*mm, self.text)
-
-
-class CppCodeBlock(Flowable):
-    """C++ syntax-aware code block with dark theme."""
-    KEYWORDS = {
-        'int','long','long long','bool','char','void','string','vector','map',
-        'unordered_map','set','unordered_set','pair','auto','const','return',
-        'if','else','while','for','do','break','continue','class','struct',
-        'public','private','true','false','nullptr','new','delete','include',
-        'using','namespace','std','endl','size_t','template','typename',
-        'static','inline','unsigned','short','double','float','deque','queue',
-        'stack','priority_queue','multiset','multimap','sort','max','min',
-        'swap','reverse','lower_bound','upper_bound','find','push_back',
-        'pop_back','push','pop','top','front','back','begin','end','empty',
-        'size','insert','erase','count','clear','emplace_back'
-    }
-
-    def __init__(self, lines, width=None):
-        super().__init__()
-        self.lines = lines
-        self._w = width or (W - 30*mm)
-        self.lh = 4.6*mm
-        self.hh = 7*mm
-        self.pad = 4*mm
-
-    def wrap(self, *args):
-        return self._w, self.hh + self.pad + len(self.lines)*self.lh + self.pad
-
-    def draw(self):
-        c = self.canv
-        th = self.hh + self.pad + len(self.lines)*self.lh + self.pad
-
-        # Background
-        c.setFillColor(CODE_BG)
-        c.roundRect(0, 0, self._w, th, 3*mm, fill=1, stroke=0)
-
-        # Header bar
-        c.setFillColor(CODE_HEADER)
-        c.roundRect(0, th - self.hh, self._w, self.hh, 3*mm, fill=1, stroke=0)
-        c.rect(0, th - self.hh, self._w, self.hh/2, fill=1, stroke=0)
-
-        # Lang tag
-        c.setFillColor(CPP_TYPE)
-        c.setFont("Helvetica-Bold", 7.5)
-        c.drawString(4*mm, th - self.hh + 2.2*mm, "C++")
-
-        # Traffic dots
-        for i, col in enumerate([HexColor("#FF5F57"), HexColor("#FEBC2E"), HexColor("#28C840")]):
-            c.setFillColor(col)
-            c.circle(self._w - (3-i)*5.5*mm, th - self.hh/2, 1.4*mm, fill=1, stroke=0)
-
-        # Code lines
-        y = th - self.hh - self.pad - self.lh
-        for idx, raw in enumerate(self.lines):
-            # Line number
-            c.setFillColor(HexColor("#3D444D"))
-            c.setFont("Courier", 7.5)
-            c.drawString(3*mm, y + 1.2*mm, f"{idx+1:2d}")
-
-            stripped = raw.lstrip()
-            indent_n = len(raw) - len(stripped)
-            x = 12*mm + indent_n * 2.2*mm
-
-            # Simple tokenizer
-            self._draw_line(c, stripped, x, y + 1.2*mm)
-            y -= self.lh
-
-    def _draw_line(self, c, text, x, y):
-        import re
-        # Comment detection
-        if '//' in text:
-            cmt_pos = text.index('//')
-            code_part = text[:cmt_pos]
-            cmt_part  = text[cmt_pos:]
-            x = self._draw_tokens(c, code_part, x, y)
-            c.setFillColor(CPP_CMT)
-            c.setFont("Courier-Oblique", 8.5)
-            c.drawString(x, y, cmt_part)
-            return
-
-        # Preprocessor
-        if text.startswith('#'):
-            c.setFillColor(CPP_KW)
-            c.setFont("Courier-Bold", 8.5)
-            c.drawString(x, y, text)
-            return
-
-        self._draw_tokens(c, text, x, y)
-
-    def _draw_tokens(self, c, text, x, y):
-        import re
-        tokens = re.findall(r'[A-Za-z_]\w*|"[^"]*"|\'[^\']*\'|\d+\.\d+|\d+|[^\w\s]|\s+', text)
-        for tok in tokens:
-            if not tok:
-                continue
-            if tok.strip() == '':
-                c.setFont("Courier", 8.5)
-                x += c.stringWidth(tok, "Courier", 8.5)
-                continue
-
-            # Choose color
-            if tok in self.KEYWORDS:
-                c.setFillColor(CPP_KW)
-                c.setFont("Courier-Bold", 8.5)
-            elif tok.startswith('"') or tok.startswith("'"):
-                c.setFillColor(CPP_STR)
-                c.setFont("Courier", 8.5)
-            elif tok.isdigit() or (tok.replace('.','',1).isdigit()):
-                c.setFillColor(CPP_NUM)
-                c.setFont("Courier", 8.5)
-            elif len(tok) > 1 and tok[0].islower() and '(' in ''.join([]):
-                c.setFillColor(CPP_FN)
-                c.setFont("Courier", 8.5)
-            else:
-                c.setFillColor(CODE_FG)
-                c.setFont("Courier", 8.5)
-
-            w = c.stringWidth(tok, "Courier", 8.5)
-            c.drawString(x, y, tok)
-            x += w
-        return x
-
+        c.roundRect(0,2*mm,10*mm,self.bh,3*mm,fill=1,stroke=0)
+        c.rect(7*mm,2*mm,3*mm,self.bh,fill=1,stroke=0)
+        c.setFillColor(white); c.setFont("Helvetica-Bold",11)
+        c.drawString(13*mm, 2*mm+self.bh/2-2*mm, self.num)
+        c.setFont("Helvetica-Bold",14)
+        c.drawString(28*mm, 2*mm+self.bh/2-2.5*mm, self.title)
 
 class InfoBox(Flowable):
     def __init__(self, lines, title="", color=BLUE, bg=LIGHT, width=None):
         super().__init__()
-        self.lines = lines if isinstance(lines, list) else [lines]
-        self.title = title
-        self.color = color
-        self.bg = bg
-        self._w = width or (W - 30*mm)
-        self.pad = 4*mm
-        self.lh = 5.2*mm
-
-    def wrap(self, *args):
-        th = 5.5*mm if self.title else 0
-        return self._w, self.pad + th + len(self.lines)*self.lh + self.pad
-
+        self.lines=lines if isinstance(lines,list) else [lines]
+        self.title=title; self.color=color; self.bg=bg
+        self._w=width or (W-30*mm); self.pad=4*mm; self.lh=5.2*mm
+    def wrap(self,*a):
+        th=5.5*mm if self.title else 0
+        return self._w, self.pad+th+len(self.lines)*self.lh+self.pad
     def draw(self):
-        c = self.canv
-        th = 5.5*mm if self.title else 0
-        total = self.pad + th + len(self.lines)*self.lh + self.pad
-        c.setFillColor(self.bg)
-        c.roundRect(0, 0, self._w, total, 2*mm, fill=1, stroke=0)
+        c=self.canv
+        th=5.5*mm if self.title else 0
+        total=self.pad+th+len(self.lines)*self.lh+self.pad
+        c.setFillColor(self.bg); c.roundRect(0,0,self._w,total,2*mm,fill=1,stroke=0)
         c.setFillColor(self.color)
-        c.roundRect(0, 0, 3.5*mm, total, 1.5*mm, fill=1, stroke=0)
-        c.rect(2*mm, 0, 1.5*mm, total, fill=1, stroke=0)
-        y = total - self.pad
+        c.roundRect(0,0,3.5*mm,total,1.5*mm,fill=1,stroke=0)
+        c.rect(2*mm,0,1.5*mm,total,fill=1,stroke=0)
+        y=total-self.pad
         if self.title:
-            c.setFillColor(self.color)
-            c.setFont("Helvetica-Bold", 9.5)
-            c.drawString(7*mm, y - 4.5*mm, self.title)
-            y -= 5.5*mm
-        c.setFillColor(DARK)
-        c.setFont("Helvetica", 8.8)
-        for line in self.lines:
-            c.drawString(7*mm, y - 4*mm, line)
-            y -= self.lh
+            c.setFillColor(self.color); c.setFont("Helvetica-Bold",9.5)
+            c.drawString(7*mm,y-4.5*mm,self.title); y-=5.5*mm
+        c.setFillColor(DARK); c.setFont("Helvetica",8.8)
+        for ln in self.lines:
+            c.drawString(7*mm,y-4*mm,ln); y-=self.lh
 
-
-class VisualBox(Flowable):
-    """Draw an array/pointer visualization."""
-    def __init__(self, cells, pointers=None, label="", color=TEAL, width=None):
+# ── Node diagram: draws linked list nodes with arrows ──────────
+class NodeDiagram(Flowable):
+    """Draw a singly or doubly linked list with boxes and arrows."""
+    def __init__(self, nodes, highlights=None, label="",
+                 color=TEAL, doubly=False, circular=False, width=None):
         super().__init__()
-        self.cells = cells       # list of strings
-        self.pointers = pointers or {}  # index -> label
-        self.label = label
-        self.color = color
-        self._w = width or (W - 30*mm)
-        self.cell_h = 10*mm
-        self.ptr_h  = 8*mm
+        self.nodes     = nodes          # list of strings (node values)
+        self.highlights= highlights or {}  # index -> color override
+        self.label     = label
+        self.color     = color
+        self.doubly    = doubly
+        self.circular  = circular
+        self._w        = width or (W - 30*mm)
+        self.node_w    = 18*mm
+        self.node_h    = 10*mm
+        self.arrow_w   = 8*mm
+        self.null_w    = 10*mm
+        self.ptr_h     = 7*mm          # space for pointer labels above
 
-    def wrap(self, *args):
-        return self._w, self.cell_h + self.ptr_h + (6*mm if self.label else 0)
+    def _total_draw_w(self):
+        n = len(self.nodes)
+        return n * self.node_w + (n - 1) * self.arrow_w + self.null_w
+
+    def wrap(self, *a):
+        h = self.node_h + self.ptr_h + (5*mm if self.label else 0) + 4*mm
+        return self._w, h
+
+    def _draw_arrow(self, c, x1, y, x2, color, up=False):
+        """Draw a right-pointing arrow from x1 to x2 at height y."""
+        ay = y + self.node_h / 2 if not up else y + self.node_h + 2*mm
+        c.setStrokeColor(color); c.setFillColor(color)
+        c.setLineWidth(1.3)
+        c.line(x1, ay, x2 - 2*mm, ay)
+        # arrowhead
+        c.setLineWidth(0)
+        p = c.beginPath()
+        p.moveTo(x2, ay)
+        p.lineTo(x2 - 2.5*mm, ay + 1.2*mm)
+        p.lineTo(x2 - 2.5*mm, ay - 1.2*mm)
+        p.close(); c.drawPath(p, fill=1, stroke=0)
+
+    def _draw_back_arrow(self, c, x1, y, x2, color):
+        """Draw a left-pointing arrow (for doubly linked list prev pointer)."""
+        ay = y + self.node_h / 2 - 2.5*mm
+        c.setStrokeColor(color); c.setFillColor(color)
+        c.setLineWidth(1.0)
+        c.line(x2 + 2*mm, ay, x1, ay)
+        p = c.beginPath()
+        p.moveTo(x2, ay)
+        p.lineTo(x2 + 2.5*mm, ay + 1.2*mm)
+        p.lineTo(x2 + 2.5*mm, ay - 1.2*mm)
+        p.close(); c.drawPath(p, fill=1, stroke=0)
 
     def draw(self):
-        c = self.canv
-        n = len(self.cells)
-        cell_w = min(14*mm, (self._w - 20*mm) / n)
-        start_x = (self._w - n * cell_w) / 2
-        base_y = self.ptr_h
+        c   = self.canv
+        n   = len(self.nodes)
+        tdw = self._total_draw_w()
+        sx  = max(0, (self._w - tdw) / 2)
+        base_y = 4*mm
 
-        # Cells
-        for i, val in enumerate(self.cells):
-            x = start_x + i * cell_w
-            highlighted = i in self.pointers
-            c.setFillColor(self.color if highlighted else HexColor("#1E293B"))
-            c.setStrokeColor(self.color)
-            c.setLineWidth(1.2)
-            c.rect(x, base_y, cell_w, self.cell_h, fill=1, stroke=1)
+        # ── Draw each node ──
+        for i, val in enumerate(self.nodes):
+            x   = sx + i * (self.node_w + self.arrow_w)
+            col = self.highlights.get(i, self.color)
+
+            # node box
+            c.setFillColor(col)
+            c.setStrokeColor(col)
+            c.setLineWidth(1.4)
+            c.roundRect(x, base_y, self.node_w, self.node_h, 2*mm, fill=1, stroke=1)
+
+            # value text
             c.setFillColor(white)
-            c.setFont("Helvetica-Bold" if highlighted else "Helvetica", 9)
+            c.setFont("Helvetica-Bold", 9)
             tw = c.stringWidth(str(val), "Helvetica-Bold", 9)
-            c.drawString(x + cell_w/2 - tw/2, base_y + 3*mm, str(val))
+            c.drawString(x + self.node_w/2 - tw/2, base_y + 3.2*mm, str(val))
 
-        # Index labels
-        for i in range(n):
-            x = start_x + i * cell_w
-            c.setFillColor(MUTED)
-            c.setFont("Helvetica", 7)
+            # index below node
+            c.setFillColor(MUTED); c.setFont("Helvetica", 7)
             iw = c.stringWidth(str(i), "Helvetica", 7)
-            c.drawString(x + cell_w/2 - iw/2, base_y - 4*mm, str(i))
+            c.drawString(x + self.node_w/2 - iw/2, base_y - 3.5*mm, str(i))
 
-        # Pointer arrows
-        for idx, ptr_label in self.pointers.items():
-            x = start_x + idx * cell_w + cell_w/2
-            c.setFillColor(self.color)
-            c.setStrokeColor(self.color)
-            c.setLineWidth(1.5)
-            c.line(x, base_y + self.cell_h + 1*mm, x, base_y + self.cell_h + 5*mm)
-            c.setFont("Helvetica-Bold", 8)
-            lw = c.stringWidth(ptr_label, "Helvetica-Bold", 8)
-            c.drawString(x - lw/2, base_y + self.cell_h + 5.5*mm, ptr_label)
+            # ── Forward arrow (next pointer) ──
+            if i < n - 1:
+                ax1 = x + self.node_w
+                ax2 = x + self.node_w + self.arrow_w
+                self._draw_arrow(c, ax1, base_y, ax2, MUTED)
 
+            # ── Back arrow for doubly linked list ──
+            if self.doubly and i < n - 1:
+                ax1 = x + self.node_w
+                ax2 = x + self.node_w + self.arrow_w
+                self._draw_back_arrow(c, ax1, base_y, ax2, HexColor("#94A3B8"))
+
+        # ── NULL terminator ──
+        null_x = sx + n * self.node_w + (n - 1) * self.arrow_w + 2*mm
+        c.setFillColor(MUTED); c.setFont("Helvetica-Bold", 8)
+        c.drawString(null_x, base_y + 3*mm, "NULL")
+
+        # ── Circular back-arrow ──
+        if self.circular and n > 0:
+            last_x = sx + (n - 1) * (self.node_w + self.arrow_w) + self.node_w
+            # draw arc below
+            c.setStrokeColor(GOLD); c.setLineWidth(1.3)
+            arc_y = base_y - 5*mm
+            c.line(last_x, base_y + self.node_h/2, last_x + 4*mm, base_y + self.node_h/2)
+            c.line(last_x + 4*mm, base_y + self.node_h/2, last_x + 4*mm, arc_y)
+            c.line(last_x + 4*mm, arc_y, sx, arc_y)
+            c.line(sx, arc_y, sx, base_y + self.node_h/2)
+            p = c.beginPath()
+            p.moveTo(sx, base_y + self.node_h/2)
+            p.lineTo(sx + 2.5*mm, base_y + self.node_h/2 + 1.2*mm)
+            p.lineTo(sx + 2.5*mm, base_y + self.node_h/2 - 1.2*mm)
+            p.close(); c.setFillColor(GOLD); c.drawPath(p, fill=1, stroke=0)
+
+        # ── Pointer labels (head, slow, fast, etc.) above nodes ──
+        for i, lbl in self.highlights.items():
+            if isinstance(lbl, str):  # label mode
+                pass  # handled separately
+        # Draw pointer labels
+        for i, info in self.highlights.items():
+            if isinstance(info, tuple):  # (color, label)
+                col, lbl = info
+                x = sx + i * (self.node_w + self.arrow_w)
+                c.setFillColor(col); c.setFont("Helvetica-Bold", 8)
+                lw = c.stringWidth(lbl, "Helvetica-Bold", 8)
+                py = base_y + self.node_h + 1.5*mm
+                c.drawString(x + self.node_w/2 - lw/2, py, lbl)
+                c.setLineWidth(1); c.setStrokeColor(col)
+                c.line(x + self.node_w/2, py - 0.5*mm,
+                       x + self.node_w/2, base_y + self.node_h)
+
+        # ── Label ──
         if self.label:
-            c.setFillColor(MUTED)
-            c.setFont("Helvetica-Oblique", 8)
+            c.setFillColor(MUTED); c.setFont("Helvetica-Oblique", 8)
             lw = c.stringWidth(self.label, "Helvetica-Oblique", 8)
-            c.drawString(self._w/2 - lw/2, 0, self.label)
+            top_y = base_y + self.node_h + self.ptr_h
+            c.drawString(self._w/2 - lw/2, top_y, self.label)
 
 
-# ─── Styles ─────────────────────────────────────────────────
+class CppBlock(Flowable):
+    KW = {
+        'int','long','bool','char','void','string','vector','map','unordered_map',
+        'set','unordered_set','pair','deque','stack','queue','priority_queue',
+        'auto','const','return','if','else','while','for','do','break','continue',
+        'class','struct','public','private','protected','true','false','nullptr',
+        'new','delete','include','using','namespace','std','endl','static',
+        'inline','template','typename','unsigned','size_t','this','NULL',
+        'ListNode','Node','DLinkedNode','forward_list',
+        'sort','max','min','swap','reverse','push_back','pop_back',
+        'begin','end','empty','size','insert','erase','count','clear',
+        'INT_MAX','INT_MIN','next','prev','val','head','tail',
+    }
+    def __init__(self, lines, width=None):
+        super().__init__()
+        self.lines = lines; self._w = width or (W-30*mm)
+        self.lh = 4.7*mm; self.hh = 7*mm; self.pad = 4*mm
+    def wrap(self, *a):
+        return self._w, self.hh + self.pad + len(self.lines)*self.lh + self.pad
+    def draw(self):
+        c = self.canv
+        th = self.hh + self.pad + len(self.lines)*self.lh + self.pad
+        c.setFillColor(CODE_BG); c.roundRect(0,0,self._w,th,3*mm,fill=1,stroke=0)
+        c.setFillColor(CODE_HDR); c.roundRect(0,th-self.hh,self._w,self.hh,3*mm,fill=1,stroke=0)
+        c.rect(0,th-self.hh,self._w,self.hh/2,fill=1,stroke=0)
+        c.setFillColor(CPP_TYPE); c.setFont("Helvetica-Bold",7.5)
+        c.drawString(4*mm,th-self.hh+2.2*mm,"C++")
+        for i,col in enumerate([HexColor("#FF5F57"),HexColor("#FEBC2E"),HexColor("#28C840")]):
+            c.setFillColor(col); c.circle(self._w-(3-i)*5.5*mm,th-self.hh/2,1.4*mm,fill=1,stroke=0)
+        y = th - self.hh - self.pad - self.lh
+        for idx, raw in enumerate(self.lines):
+            c.setFillColor(HexColor("#3D444D")); c.setFont("Courier",7.5)
+            c.drawString(3*mm, y+1.2*mm, f"{idx+1:2d}")
+            stripped = raw.lstrip(); indent = len(raw)-len(stripped)
+            x = 12*mm + indent*2.2*mm
+            self._draw_line(c, stripped, x, y+1.2*mm)
+            y -= self.lh
+    def _draw_line(self, c, text, x, y):
+        import re
+        if '//' in text:
+            ci = text.index('//')
+            x = self._draw_tokens(c, text[:ci], x, y)
+            c.setFillColor(CPP_CMT); c.setFont("Courier-Oblique",8.5)
+            c.drawString(x,y,text[ci:]); return
+        if text.startswith('#'):
+            c.setFillColor(CPP_KW); c.setFont("Courier-Bold",8.5)
+            c.drawString(x,y,text); return
+        if text.strip().startswith('/*') or text.strip().startswith('*'):
+            c.setFillColor(CPP_CMT); c.setFont("Courier-Oblique",8.5)
+            c.drawString(x,y,text); return
+        self._draw_tokens(c, text, x, y)
+    def _draw_tokens(self, c, text, x, y):
+        import re
+        tokens = re.findall(r'[A-Za-z_]\w*|"[^"]*"|\'[^\']*\'|\d+\.\d+|\d+|[^\w\s]|\s+', text)
+        for tok in tokens:
+            if not tok: continue
+            if tok.strip() == '':
+                x += c.stringWidth(tok,"Courier",8.5); continue
+            if tok in self.KW:
+                c.setFillColor(CPP_KW); c.setFont("Courier-Bold",8.5)
+            elif tok.startswith('"') or tok.startswith("'"):
+                c.setFillColor(CPP_STR); c.setFont("Courier",8.5)
+            elif tok.isdigit() or tok.replace('.','',1).isdigit():
+                c.setFillColor(CPP_NUM); c.setFont("Courier",8.5)
+            else:
+                c.setFillColor(CODE_FG); c.setFont("Courier",8.5)
+            c.drawString(x,y,tok); x += c.stringWidth(tok,"Courier",8.5)
+        return x
+
+# ─── Style helpers ─────────────────────────────────────────────
 def S(name, **kw):
-    base = dict(fontName="Helvetica", fontSize=9.5, textColor=DARK,
-                leading=14, spaceBefore=3, spaceAfter=3)
-    base.update(kw)
-    return ParagraphStyle(name, **base)
+    base = dict(fontName="Helvetica",fontSize=9.5,textColor=DARK,
+                leading=14,spaceBefore=3,spaceAfter=3)
+    base.update(kw); return ParagraphStyle(name,**base)
 
 ST = {
-    "h1": S("h1", fontName="Helvetica-Bold", fontSize=20, textColor=NAVY, leading=26, spaceBefore=14, spaceAfter=6),
-    "h2": S("h2", fontName="Helvetica-Bold", fontSize=14, textColor=BLUE, leading=20, spaceBefore=10, spaceAfter=4),
-    "h3": S("h3", fontName="Helvetica-Bold", fontSize=11.5, textColor=TEAL, leading=16, spaceBefore=8, spaceAfter=3),
-    "h4": S("h4", fontName="Helvetica-Bold", fontSize=10, textColor=NAVY, leading=14, spaceBefore=6, spaceAfter=2),
-    "body": S("body", alignment=TA_JUSTIFY, leading=15),
-    "bullet": S("bullet", leftIndent=12, firstLineIndent=-8, leading=13, spaceBefore=2, spaceAfter=2),
-    "caption": S("caption", fontName="Helvetica-Oblique", fontSize=8.5, textColor=MUTED, spaceBefore=2, spaceAfter=6),
-    "toc_h": S("toc_h", fontName="Helvetica-Bold", fontSize=11, textColor=NAVY, spaceBefore=5, spaceAfter=2, leading=15),
-    "toc_i": S("toc_i", fontSize=9.5, textColor=DARK, spaceBefore=1, spaceAfter=1, leftIndent=8, leading=13),
-    "note":  S("note",  fontName="Helvetica-Oblique", fontSize=9, textColor=MUTED),
-    "cover_title": S("ct", fontName="Helvetica-Bold", fontSize=34, textColor=white, leading=40, alignment=TA_CENTER),
-    "cover_sub":   S("cs", fontName="Helvetica-Bold", fontSize=20, textColor=HexColor("#A8D4F5"), leading=26, alignment=TA_CENTER),
-    "cover_desc":  S("cd", fontName="Helvetica",      fontSize=11, textColor=HexColor("#CBD5E1"), leading=16, alignment=TA_CENTER),
+    "body":    S("body",   alignment=TA_JUSTIFY, leading=15),
+    "bullet":  S("bullet", leftIndent=12, firstLineIndent=-8, leading=13, spaceBefore=2, spaceAfter=2),
+    "caption": S("caption",fontName="Helvetica-Oblique",fontSize=8.5,textColor=MUTED,spaceBefore=2,spaceAfter=6),
+    "toc_h":   S("toc_h", fontName="Helvetica-Bold",fontSize=11,textColor=NAVY,spaceBefore=5,spaceAfter=2,leading=15),
+    "toc_i":   S("toc_i", fontSize=9.5,textColor=DARK,spaceBefore=1,spaceAfter=1,leftIndent=8,leading=13),
+    "cover_t": S("ct", fontName="Helvetica-Bold",fontSize=34,textColor=white,leading=40,alignment=TA_CENTER),
+    "cover_s": S("cs", fontName="Helvetica-Bold",fontSize=19,textColor=HexColor("#A0DDE6"),leading=26,alignment=TA_CENTER),
+    "cover_d": S("cd", fontName="Helvetica",fontSize=11,textColor=HexColor("#CBD5E1"),leading=16,alignment=TA_CENTER),
+    "h2": S("h2",fontName="Helvetica-Bold",fontSize=14,textColor=BLUE,leading=20,spaceBefore=10,spaceAfter=4),
+    "h3": S("h3",fontName="Helvetica-Bold",fontSize=11.5,textColor=TEAL,leading=16,spaceBefore=8,spaceAfter=3),
+    "h4": S("h4",fontName="Helvetica-Bold",fontSize=10,textColor=NAVY,leading=14,spaceBefore=6,spaceAfter=2),
 }
 
-def sp(n=1):   return Spacer(1, n * 4*mm)
-def hr(color=BORDER): return HRFlowable(width="100%", thickness=0.5, color=color, spaceAfter=2*mm, spaceBefore=2*mm)
-def h2(t, col=BLUE):  return Paragraph(t, ParagraphStyle("_h2", parent=ST["h2"], textColor=col))
-def h3(t, col=TEAL):  return Paragraph(t, ParagraphStyle("_h3", parent=ST["h3"], textColor=col))
-def h4(t, col=NAVY):  return Paragraph(t, ParagraphStyle("_h4", parent=ST["h4"], textColor=col))
-def body(t):          return Paragraph(t, ST["body"])
-def cap(t):           return Paragraph(f"<i>{t}</i>", ST["caption"])
+def sp(n=1):  return Spacer(1, n*4*mm)
+def hr(c=BORDER): return HRFlowable(width="100%",thickness=0.5,color=c,spaceAfter=2*mm,spaceBefore=2*mm)
+def body(t):  return Paragraph(t, ST["body"])
+def cap(t):   return Paragraph(f"<i>{t}</i>", ST["caption"])
+def h2(t, col=BLUE):   return Paragraph(t, ParagraphStyle("_h2",parent=ST["h2"],textColor=col))
+def h3(t, col=TEAL):   return Paragraph(t, ParagraphStyle("_h3",parent=ST["h3"],textColor=col))
+def h4(t, col=NAVY):   return Paragraph(t, ParagraphStyle("_h4",parent=ST["h4"],textColor=col))
+def bl(t, col="#1F7A8C"): return Paragraph(f'<font color="{col}">▸</font>  {t}', ST["bullet"])
+def nb(n, t, col="#1F7A8C"): return Paragraph(f'<font color="{col}"><b>{n}.</b></font>  {t}', ST["bullet"])
 
-def bl(text, col="#2E75B6"):
-    return Paragraph(f'<font color="{col}">▸</font>  {text}', ST["bullet"])
-
-def nb(text, n, col="#2E75B6"):
-    return Paragraph(f'<font color="{col}"><b>{n}.</b></font>  {text}', ST["bullet"])
-
-def tbl(data, col_widths, style_extra=None):
+def mtbl(data, cw, extra=None):
     base = [
-        ("BACKGROUND",    (0,0), (-1,0), NAVY),
-        ("TEXTCOLOR",     (0,0), (-1,0), white),
-        ("FONTNAME",      (0,0), (-1,0), "Helvetica-Bold"),
-        ("FONTNAME",      (0,1), (0,-1), "Helvetica-Bold"),
-        ("BACKGROUND",    (0,1), (0,-1), LIGHT),
-        ("TEXTCOLOR",     (0,1), (0,-1), NAVY),
-        ("ROWBACKGROUNDS",(1,1), (-1,-1), [white, ALT_ROW]),
-        ("FONTSIZE",      (0,0), (-1,-1), 8.5),
-        ("TOPPADDING",    (0,0), (-1,-1), 5),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 5),
-        ("LEFTPADDING",   (0,0), (-1,-1), 5),
-        ("BOX",           (0,0), (-1,-1), 0.5, BORDER),
-        ("INNERGRID",     (0,0), (-1,-1), 0.3, BORDER),
-        ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
+        ("BACKGROUND",(0,0),(-1,0),NAVY),("TEXTCOLOR",(0,0),(-1,0),white),
+        ("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),
+        ("FONTNAME",(0,1),(0,-1),"Helvetica-Bold"),
+        ("BACKGROUND",(0,1),(0,-1),LIGHT),("TEXTCOLOR",(0,1),(0,-1),NAVY),
+        ("ROWBACKGROUNDS",(1,1),(-1,-1),[white,ALT_ROW]),
+        ("FONTSIZE",(0,0),(-1,-1),8.5),
+        ("TOPPADDING",(0,0),(-1,-1),5),("BOTTOMPADDING",(0,0),(-1,-1),5),
+        ("LEFTPADDING",(0,0),(-1,-1),5),
+        ("BOX",(0,0),(-1,-1),0.5,BORDER),("INNERGRID",(0,0),(-1,-1),0.3,BORDER),
+        ("VALIGN",(0,0),(-1,-1),"MIDDLE"),
     ]
-    if style_extra:
-        base += style_extra
-    t = Table(data, colWidths=col_widths)
-    t.setStyle(TableStyle(base))
-    return t
+    if extra: base += extra
+    t = Table(data, colWidths=cw); t.setStyle(TableStyle(base)); return t
 
-# ════════════════════════════════════════════════════════════
-#  BUILD STORY
-# ════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
+#  STORY
+# ══════════════════════════════════════════════════════════════
 story = []
 
-# ── COVER ────────────────────────────────────────────────────
+# ── COVER ──────────────────────────────────────────────────────
 story.append(sp(4))
-cover_data = [
-    [Paragraph("DSA Revision Notes", ST["cover_title"])],
-    [Paragraph("Topic 2 — Two Pointers &amp; Sliding Window", ST["cover_sub"])],
+cd = [
+    [Paragraph("DSA Revision Notes", ST["cover_t"])],
+    [Paragraph("Topic 5 — Linked List (All Types &amp; Operations)", ST["cover_s"])],
     [Paragraph(
-        "Complete theory  ·  All patterns  ·  Complexity analysis<br/>"
-        "C++ code for every technique  ·  Visual diagrams  ·  LeetCode prep",
-        ST["cover_desc"]
+        "Singly · Doubly · Circular · XOR List  •  All Operations with Diagrams<br/>"
+        "Floyd's Cycle · Reversal · Merge · LRU Cache · 20+ C++ examples",
+        ST["cover_d"]
     )],
 ]
-cover_t = Table(cover_data, colWidths=[W - 30*mm])
-cover_t.setStyle(TableStyle([
-    ("BACKGROUND",    (0,0), (-1,-1), NAVY),
-    ("TOPPADDING",    (0,0), (-1,0), 22),
-    ("BOTTOMPADDING", (0,0), (-1,0), 10),
-    ("TOPPADDING",    (0,1), (-1,1), 8),
-    ("BOTTOMPADDING", (0,1), (-1,1), 10),
-    ("TOPPADDING",    (0,2), (-1,2), 8),
-    ("BOTTOMPADDING", (0,2), (-1,2), 22),
+ct = Table(cd, colWidths=[W-30*mm])
+ct.setStyle(TableStyle([
+    ("BACKGROUND",(0,0),(-1,-1),NAVY),
+    ("TOPPADDING",(0,0),(-1,0),22),("BOTTOMPADDING",(0,0),(-1,0),8),
+    ("TOPPADDING",(0,1),(-1,1),8),("BOTTOMPADDING",(0,1),(-1,1),10),
+    ("TOPPADDING",(0,2),(-1,2),8),("BOTTOMPADDING",(0,2),(-1,2),22),
     ("ROUNDEDCORNERS",[4*mm]),
 ]))
-story.append(cover_t)
-story.append(sp(2))
+story.append(ct); story.append(sp(2))
 
 stats = [[
-    Paragraph('<b><font color="#1A3C5E">10</font></b><br/><font size="8" color="#64748B">Sections</font>',
-              ParagraphStyle("st", fontName="Helvetica-Bold", fontSize=18, textColor=NAVY, alignment=TA_CENTER, leading=22)),
-    Paragraph('<b><font color="#1A3C5E">20+</font></b><br/><font size="8" color="#64748B">C++ Examples</font>',
-              ParagraphStyle("st2", fontName="Helvetica-Bold", fontSize=18, textColor=NAVY, alignment=TA_CENTER, leading=22)),
-    Paragraph('<b><font color="#1A3C5E">15+</font></b><br/><font size="8" color="#64748B">Patterns</font>',
-              ParagraphStyle("st3", fontName="Helvetica-Bold", fontSize=18, textColor=NAVY, alignment=TA_CENTER, leading=22)),
-    Paragraph('<b><font color="#1A3C5E">8</font></b><br/><font size="8" color="#64748B">Visuals</font>',
-              ParagraphStyle("st4", fontName="Helvetica-Bold", fontSize=18, textColor=NAVY, alignment=TA_CENTER, leading=22)),
+    Paragraph('<b><font color="#1A3C5E">11</font></b><br/><font size="8" color="#64748B">Sections</font>',
+              ParagraphStyle("s1",fontName="Helvetica-Bold",fontSize=18,textColor=NAVY,alignment=TA_CENTER,leading=22)),
+    Paragraph('<b><font color="#1A3C5E">25+</font></b><br/><font size="8" color="#64748B">C++ Examples</font>',
+              ParagraphStyle("s2",fontName="Helvetica-Bold",fontSize=18,textColor=NAVY,alignment=TA_CENTER,leading=22)),
+    Paragraph('<b><font color="#1A3C5E">12</font></b><br/><font size="8" color="#64748B">Node Diagrams</font>',
+              ParagraphStyle("s3",fontName="Helvetica-Bold",fontSize=18,textColor=NAVY,alignment=TA_CENTER,leading=22)),
+    Paragraph('<b><font color="#1A3C5E">22+</font></b><br/><font size="8" color="#64748B">LeetCode Problems</font>',
+              ParagraphStyle("s4",fontName="Helvetica-Bold",fontSize=18,textColor=NAVY,alignment=TA_CENTER,leading=22)),
 ]]
 st = Table(stats, colWidths=[(W-30*mm)/4]*4)
 st.setStyle(TableStyle([
-    ("BACKGROUND",    (0,0), (-1,-1), LIGHT),
-    ("BOX",           (0,0), (-1,-1), 0.5, BORDER),
-    ("INNERGRID",     (0,0), (-1,-1), 0.5, BORDER),
-    ("TOPPADDING",    (0,0), (-1,-1), 8),
-    ("BOTTOMPADDING", (0,0), (-1,-1), 8),
+    ("BACKGROUND",(0,0),(-1,-1),LIGHT),("BOX",(0,0),(-1,-1),0.5,BORDER),
+    ("INNERGRID",(0,0),(-1,-1),0.5,BORDER),
+    ("TOPPADDING",(0,0),(-1,-1),8),("BOTTOMPADDING",(0,0),(-1,-1),8),
 ]))
-story.append(st)
-story.append(PageBreak())
+story.append(st); story.append(PageBreak())
 
-# ── TABLE OF CONTENTS ───────────────────────────────────────
-story.append(SectionBanner("TOC", "Table of Contents", NAVY, TEAL))
+# ── TOC ────────────────────────────────────────────────────────
+story.append(Banner("TOC","Table of Contents",NAVY,TEAL))
 story.append(sp(1))
-
-toc_items = [
-    ("1.", "Introduction — What are Two Pointers & Sliding Window?"),
-    ("", "→ Core idea, When to use, Problem signals"),
-    ("2.", "Two Pointers — Opposite Ends Pattern"),
-    ("", "→ Template, Sorted array pairs, Container With Most Water"),
-    ("", "→ Trapping Rain Water, 3Sum, 4Sum"),
-    ("3.", "Two Pointers — Same Direction (Fast/Slow)"),
-    ("", "→ Remove duplicates, Move zeroes, Partition"),
-    ("", "→ Is Subsequence, Merge sorted arrays"),
-    ("4.", "Two Pointers — Dutch National Flag"),
-    ("", "→ Sort Colors, 3-way partition template"),
-    ("5.", "Two Pointers — Palindrome Patterns"),
-    ("", "→ Valid Palindrome, Valid Palindrome II"),
-    ("6.", "Sliding Window — Fixed Size"),
-    ("", "→ Template, Max sum of size K, First negative in window"),
-    ("7.", "Sliding Window — Variable Size (Expand/Shrink)"),
-    ("", "→ Template, Longest substring without repeat"),
-    ("", "→ Min Window Substring, Permutation in String"),
-    ("8.", "Sliding Window — At-Most-K Trick"),
-    ("", "→ Exactly K = AtMost(K) - AtMost(K-1)"),
-    ("", "→ Subarrays with K different integers"),
-    ("9.", "Advanced Patterns"),
-    ("", "→ Sliding Window Maximum (Monotonic Deque)"),
-    ("", "→ Longest Repeating Character Replacement"),
-    ("10.", "Complexity & Pattern Cheat Sheet"),
+toc = [
+    ("1.", "Introduction — What is a Linked List?"),
+    ("",   "→ Definition · Memory layout · vs Array comparison"),
+    ("2.", "Singly Linked List — Full Implementation"),
+    ("",   "→ Node struct · All operations with C++ code"),
+    ("",   "→ Insert at head/tail/position · Delete · Search · Reverse"),
+    ("3.", "Doubly Linked List — Full Implementation"),
+    ("",   "→ DNode struct with prev/next · All operations"),
+    ("",   "→ Insert/Delete at both ends · Bidirectional traversal"),
+    ("4.", "Circular Linked List"),
+    ("",   "→ Singly circular · Doubly circular · Josephus problem"),
+    ("5.", "XOR Linked List (Memory-Efficient Doubly LL)"),
+    ("",   "→ XOR trick · insert/delete with XOR addresses"),
+    ("6.", "Two Pointer Techniques on Linked Lists"),
+    ("",   "→ Find middle · Nth from end · Detect cycle (Floyd's)"),
+    ("",   "→ Find cycle entry · Intersection of two lists"),
+    ("7.", "Reversal Patterns"),
+    ("",   "→ Reverse full list · Reverse between L and R"),
+    ("",   "→ Reverse in K-groups · Reverse alternate K nodes"),
+    ("8.", "Merge & Sort Patterns"),
+    ("",   "→ Merge two sorted lists · Merge K sorted lists"),
+    ("",   "→ Sort a linked list (Merge Sort)"),
+    ("9.", "Linked List + HashMap Patterns"),
+    ("",   "→ Copy list with random pointer · Detect & remove loop"),
+    ("",   "→ LRU Cache (DLL + HashMap)"),
+    ("10.","Palindrome, Reorder & Other Patterns"),
+    ("",   "→ Palindrome check · Reorder list · Odd-Even grouping"),
+    ("11.","Complexity Cheat Sheet & LeetCode Map"),
 ]
-for num, title in toc_items:
+for num, title in toc:
     if num:
         story.append(Paragraph(f'<b><font color="#1A3C5E">{num}</font></b>  <b>{title}</b>', ST["toc_h"]))
     else:
         story.append(Paragraph(f'<font color="#64748B">        {title}</font>', ST["toc_i"]))
-
 story.append(PageBreak())
 
-# ════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
 #  SECTION 1 — INTRODUCTION
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("1", "Introduction", NAVY, TEAL))
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("1","Introduction — What is a Linked List?",NAVY,TEAL))
 story.append(sp(1))
 
-story.append(h2("1.1  What are Two Pointers?"))
+story.append(h2("1.1  Definition"))
 story.append(body(
-    "The <b>Two Pointer</b> technique uses two index variables that traverse a data structure — "
-    "usually an array or string — simultaneously. Instead of nested loops (O(n²)), "
-    "each pointer moves at most n steps total, giving <b>O(n)</b> time with <b>O(1)</b> extra space. "
-    "It is one of the most powerful tricks for reducing brute-force solutions."
-))
-story.append(sp(0.5))
-story.append(InfoBox([
-    "Opposite ends: l=0, r=n-1, converge inward. Use on SORTED arrays for pair/triplet problems.",
-    "Same direction: slow and fast both move left-to-right. Use for partitioning or subsequences.",
-    "Fast/Slow (Floyd): one moves 1 step, other 2 steps. Use for cycle detection in linked lists.",
-], title="⚡ Three Two-Pointer Variants", color=NAVY, bg=LIGHT))
-story.append(sp(0.5))
-
-story.append(h2("1.2  What is Sliding Window?"))
-story.append(body(
-    "A <b>Sliding Window</b> is a contiguous subarray/substring that 'slides' across the data. "
-    "Instead of recomputing the window from scratch each step (O(n²)), we add the new right element "
-    "and remove the old left element — O(1) per slide. Two types exist:"
-))
-story.append(bl("<b>Fixed window:</b> window size k is constant. Slide by one position each step."))
-story.append(bl("<b>Variable window:</b> expand right freely; shrink left when window becomes invalid."))
-story.append(sp(0.5))
-
-story.append(h2("1.3  When to Use — Problem Signals"))
-signals = [
-    ["Signal in Problem",                    "Likely Technique"],
-    ['"Find pair that sums to target"',       "Two Pointers (opposite ends) on sorted array"],
-    ['"Longest subarray/substring with..."', "Sliding Window (variable)"],
-    ['"Subarray of size k with max sum"',     "Sliding Window (fixed)"],
-    ['"Remove duplicates in-place"',          "Two Pointers (same direction)"],
-    ['"Is S a subsequence of T?"',            "Two Pointers (same direction)"],
-    ['"Minimum window containing all chars"', "Sliding Window + frequency map"],
-    ['"Exactly K distinct / equal K"',        "AtMost(K) - AtMost(K-1) trick"],
-    ['"Sort array with 3 values"',            "Dutch National Flag (three pointers)"],
-    ['"Container / trap water"',              "Two Pointers (opposite ends)"],
-    ['"Cycle in linked list"',                "Fast/Slow pointers (Floyd)"],
-]
-story.append(tbl(signals, [75*mm, 93*mm]))
-story.append(cap("Table 1: Problem signal → technique mapping"))
-
-story.append(PageBreak())
-
-# ════════════════════════════════════════════════════════════
-#  SECTION 2 — OPPOSITE ENDS
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("2", "Two Pointers — Opposite Ends Pattern", BLUE, TEAL))
-story.append(sp(1))
-
-story.append(h2("2.1  Core Template"))
-story.append(body(
-    "Place one pointer at the start and one at the end. Move them toward each other based on a condition. "
-    "Works on <b>sorted arrays</b> because sorted order gives us a monotone property: "
-    "if arr[l]+arr[r] &lt; target, increasing l increases the sum; if too large, decreasing r decreases it."
+    "A <b>Linked List</b> is a linear data structure where elements (<b>nodes</b>) are stored at "
+    "<b>non-contiguous memory locations</b>. Each node contains a <b>data field</b> and one or more "
+    "<b>pointer fields</b> that link it to the next (and/or previous) node. "
+    "Unlike arrays, linked lists have no random access — to reach node at position i, you must "
+    "traverse from the head, taking O(i) time."
 ))
 story.append(sp(0.5))
 
-story.append(VisualBox(
-    ["1", "3", "5", "7", "9", "11", "14"],
-    {0: "l", 6: "r"},
-    label="Opposite ends: l starts at 0, r starts at n-1",
-    color=BLUE
-))
-story.append(sp(0.5))
-
-story.append(CppCodeBlock([
-    "// ── OPPOSITE ENDS TEMPLATE ──────────────────────────────",
-    "// Precondition: array is SORTED",
-    "int l = 0, r = n - 1;",
-    "while (l < r) {",
-    "    if (condition_met(arr[l], arr[r])) {",
-    "        // record answer",
-    "        l++; r--;              // or just one of them",
-    "    } else if (need_larger) {",
-    "        l++;                   // increase sum",
-    "    } else {",
-    "        r--;                   // decrease sum",
-    "    }",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("2.2  Two Sum II — Sorted Array  (LC 167)"))
-story.append(body(
-    "Given a <b>1-indexed</b> sorted array, find two numbers that add up to target. "
-    "Because the array is sorted, opposite-ends two pointers gives O(n) with O(1) space."
-))
-story.append(CppCodeBlock([
-    "#include <vector>",
-    "using namespace std;",
-    "",
-    "vector<int> twoSum(vector<int>& numbers, int target) {",
-    "    int l = 0, r = numbers.size() - 1;",
-    "    while (l < r) {",
-    "        int sum = numbers[l] + numbers[r];",
-    "        if (sum == target)  return {l + 1, r + 1};  // 1-indexed",
-    "        else if (sum < target) l++;   // need bigger sum",
-    "        else                   r--;   // need smaller sum",
-    "    }",
-    "    return {};   // guaranteed to find per problem",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("2.3  Container With Most Water  (LC 11)"))
-story.append(body(
-    "Given heights of walls, find two walls that trap the most water. "
-    "Area = min(height[l], height[r]) × (r − l). "
-    "<b>Greedy insight:</b> always move the pointer with the <i>shorter</i> wall — "
-    "keeping the taller wall gives a chance for a larger area with a closer wall."
-))
-story.append(CppCodeBlock([
-    "int maxArea(vector<int>& height) {",
-    "    int l = 0, r = height.size() - 1;",
-    "    int best = 0;",
-    "    while (l < r) {",
-    "        int area = min(height[l], height[r]) * (r - l);",
-    "        best = max(best, area);",
-    "        // Move the shorter wall inward",
-    "        if (height[l] < height[r]) l++;",
-    "        else                        r--;",
-    "    }",
-    "    return best;",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-story.append(sp(0.5))
-story.append(InfoBox([
-    "Why does moving the shorter wall work?",
-    "Current area is limited by min(h[l], h[r]). Moving the TALLER wall can only make it worse",
-    "or equal (width shrinks, height capped by shorter wall). Moving SHORTER gives a chance.",
-], title="💡 Proof of Greedy Choice", color=BLUE, bg=LIGHT))
-story.append(sp(0.8))
-
-story.append(h2("2.4  Trapping Rain Water  (LC 42)"))
-story.append(body(
-    "Water at index i = min(maxLeft[i], maxRight[i]) − height[i]. "
-    "Brute force: O(n²). Prefix arrays: O(n) time O(n) space. "
-    "<b>Two pointers: O(n) time O(1) space.</b> "
-    "Key insight: if maxLeft &lt; maxRight, the water at l is determined by maxLeft alone — "
-    "process l and move it inward."
-))
-story.append(CppCodeBlock([
-    "int trap(vector<int>& height) {",
-    "    int l = 0, r = height.size() - 1;",
-    "    int maxL = 0, maxR = 0, water = 0;",
-    "    while (l < r) {",
-    "        if (height[l] <= height[r]) {",
-    "            // Left side is the bottleneck",
-    "            if (height[l] >= maxL) maxL = height[l];",
-    "            else                   water += maxL - height[l];",
-    "            l++;",
-    "        } else {",
-    "            // Right side is the bottleneck",
-    "            if (height[r] >= maxR) maxR = height[r];",
-    "            else                   water += maxR - height[r];",
-    "            r--;",
-    "        }",
-    "    }",
-    "    return water;",
-    "}",
-    "// Time: O(n)   Space: O(1)  — optimal solution",
-]))
-story.append(sp(0.8))
-
-story.append(h2("2.5  3Sum  (LC 15)"))
-story.append(body(
-    "Find all unique triplets that sum to zero. Strategy: <b>sort</b> the array, "
-    "then for each element i, run two pointers on the remaining subarray [i+1, n-1]. "
-    "Skip duplicates explicitly to avoid repeated triplets."
-))
-story.append(CppCodeBlock([
-    "vector<vector<int>> threeSum(vector<int>& nums) {",
-    "    sort(nums.begin(), nums.end());",
-    "    vector<vector<int>> res;",
-    "    int n = nums.size();",
-    "    for (int i = 0; i < n - 2; i++) {",
-    "        if (i > 0 && nums[i] == nums[i-1]) continue; // skip dup",
-    "        int l = i + 1, r = n - 1;",
-    "        while (l < r) {",
-    "            int sum = nums[i] + nums[l] + nums[r];",
-    "            if (sum == 0) {",
-    "                res.push_back({nums[i], nums[l], nums[r]});",
-    "                while (l < r && nums[l] == nums[l+1]) l++; // skip dup",
-    "                while (l < r && nums[r] == nums[r-1]) r--; // skip dup",
-    "                l++; r--;",
-    "            } else if (sum < 0) l++;",
-    "            else                r--;",
-    "        }",
-    "    }",
-    "    return res;",
-    "}",
-    "// Time: O(n^2)   Space: O(1) extra (output not counted)",
-]))
-
-story.append(PageBreak())
-
-# ════════════════════════════════════════════════════════════
-#  SECTION 3 — SAME DIRECTION
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("3", "Two Pointers — Same Direction (Fast / Slow)", TEAL, BLUE))
-story.append(sp(1))
-
-story.append(h2("3.1  Core Template"))
-story.append(body(
-    "Both pointers start at the left. <b>Fast</b> pointer scans every element; "
-    "<b>Slow</b> pointer marks the boundary of the valid/processed region. "
-    "When fast finds a qualifying element, write it to slow's position and advance slow. "
-    "This pattern modifies the array <b>in-place</b> with O(1) space."
-))
-story.append(VisualBox(
-    ["0", "1", "0", "3", "12", "0"],
-    {1: "slow", 3: "fast"},
-    label="Move Zeroes: slow tracks last non-zero, fast scans ahead",
+# Basic SLL diagram
+story.append(NodeDiagram(
+    ["10","20","30","40","50"],
+    highlights={0:(TEAL,"head"), 4:(RED,"tail")},
+    label="Singly Linked List — each node stores value + pointer to next",
     color=TEAL
 ))
 story.append(sp(0.5))
-story.append(CppCodeBlock([
-    "// ── SAME DIRECTION TEMPLATE ─────────────────────────────",
-    "int slow = 0;",
-    "for (int fast = 0; fast < n; fast++) {",
-    "    if (qualifies(arr[fast])) {",
-    "        arr[slow] = arr[fast];  // write qualifying element",
-    "        slow++;",
+
+story.append(h2("1.2  Memory Layout — Array vs Linked List"))
+story.append(body(
+    "Arrays store elements in <b>contiguous memory</b> — element i is at base + i×size. "
+    "Linked list nodes can be anywhere in memory; pointers stitch them together. "
+    "This gives linked lists O(1) insert/delete at known positions but O(n) access by index."
+))
+story.append(sp(0.5))
+
+cmp_data = [
+    ["Property",            "Array",               "Linked List"],
+    ["Memory layout",       "Contiguous",          "Non-contiguous (scattered)"],
+    ["Access by index",     "O(1) direct",         "O(n) traversal"],
+    ["Insert at front",     "O(n) shift all",      "O(1) update head pointer"],
+    ["Insert at end",       "O(1)* amortized",     "O(n) traverse / O(1) with tail ptr"],
+    ["Insert at position i","O(n) shift",          "O(n) traverse + O(1) relink"],
+    ["Delete at front",     "O(n) shift all",      "O(1) move head"],
+    ["Delete at position i","O(n) shift",          "O(n) traverse + O(1) unlink"],
+    ["Search",              "O(n) / O(log n) sorted","O(n) always"],
+    ["Memory overhead",     "None (pure data)",    "Extra pointer(s) per node"],
+    ["Cache performance",   "Excellent (locality)","Poor (pointer chasing)"],
+    ["Size flexibility",    "Fixed (static) / resize","Dynamic — grows node by node"],
+    ["Reverse",             "O(n)",                "O(n)"],
+]
+extra_cmp = []
+for i in range(1, len(cmp_data)):
+    extra_cmp.append(("TEXTCOLOR",(1,i),(1,i),NAVY))
+    extra_cmp.append(("TEXTCOLOR",(2,i),(2,i),TEAL))
+story.append(mtbl(cmp_data, [45*mm,55*mm,68*mm], extra=extra_cmp))
+story.append(cap("Table 1: Array vs Linked List — complete comparison"))
+story.append(sp(0.5))
+
+story.append(h2("1.3  Types of Linked Lists"))
+types = [
+    ("Singly Linked List",   "Each node has one pointer: next. Traversal only forward."),
+    ("Doubly Linked List",   "Each node has two pointers: prev and next. Bidirectional traversal."),
+    ("Circular Linked List", "Last node's next points back to head (no NULL terminator)."),
+    ("Doubly Circular LL",   "Doubly linked + tail.next = head + head.prev = tail."),
+    ("XOR Linked List",      "Memory-efficient doubly LL: one pointer stores XOR of prev and next addresses."),
+    ("Skip List",            "Multiple layers of linked lists for O(log n) average search."),
+]
+for name, desc in types:
+    story.append(bl(f"<b>{name}:</b> {desc}"))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 2 — SINGLY LINKED LIST
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("2","Singly Linked List — Full Implementation",TEAL,NAVY))
+story.append(sp(1))
+
+story.append(h2("2.1  Node Structure"))
+story.append(CppBlock([
+    "// Standard LeetCode ListNode definition",
+    "struct ListNode {",
+    "    int val;",
+    "    ListNode* next;",
+    "    ListNode()          : val(0),  next(nullptr) {}",
+    "    ListNode(int x)     : val(x),  next(nullptr) {}",
+    "    ListNode(int x, ListNode* next) : val(x), next(next) {}",
+    "};",
+    "",
+    "// Full SLL class",
+    "class SinglyLinkedList {",
+    "    ListNode* head;",
+    "    int _size;",
+    "public:",
+    "    SinglyLinkedList() : head(nullptr), _size(0) {}",
+    "    ~SinglyLinkedList() {",
+    "        while (head) { ListNode* tmp = head; head = head->next; delete tmp; }",
     "    }",
+    "    int size()  const { return _size; }",
+    "    bool empty()const { return head == nullptr; }",
+    "};",
+]))
+story.append(sp(0.8))
+
+story.append(h2("2.2  Insert Operations"))
+story.append(h3("Insert at Head — O(1)"))
+story.append(NodeDiagram(
+    ["NEW","10","20","30"],
+    highlights={0:(GREEN,"new"), 1:(TEAL,"old head")},
+    label="Insert at head: new->next = head; head = new  →  O(1)",
+    color=TEAL
+))
+story.append(sp(0.3))
+story.append(CppBlock([
+    "void insertAtHead(int val) {",
+    "    ListNode* node = new ListNode(val);",
+    "    node->next = head;   // point new node to old head",
+    "    head = node;         // update head to new node",
+    "    _size++;",
     "}",
-    "// Result: arr[0..slow-1] contains all qualifying elements",
+    "// Time: O(1)   Space: O(1)",
+]))
+story.append(sp(0.5))
+
+story.append(h3("Insert at Tail — O(n) without tail ptr, O(1) with tail ptr"))
+story.append(CppBlock([
+    "void insertAtTail(int val) {",
+    "    ListNode* node = new ListNode(val);",
+    "    if (!head) { head = node; _size++; return; }",
+    "    ListNode* curr = head;",
+    "    while (curr->next) curr = curr->next;  // traverse to last node",
+    "    curr->next = node;    // link last node to new node",
+    "    _size++;",
+    "}",
+    "// Time: O(n) — must find tail.  Optimize: keep a 'tail' pointer → O(1)",
+]))
+story.append(sp(0.5))
+
+story.append(h3("Insert at Position k — O(k)"))
+story.append(CppBlock([
+    "void insertAt(int pos, int val) {",
+    "    if (pos < 0 || pos > _size) return;  // invalid",
+    "    if (pos == 0) { insertAtHead(val); return; }",
+    "    ListNode* node = new ListNode(val);",
+    "    ListNode* curr = head;",
+    "    for (int i = 0; i < pos - 1; i++)    // stop at node BEFORE pos",
+    "        curr = curr->next;",
+    "    node->next = curr->next;              // link new node forward",
+    "    curr->next = node;                    // link predecessor to new",
+    "    _size++;",
+    "}",
+    "// Time: O(pos)   Space: O(1)",
+]))
+story.append(sp(0.8))
+
+story.append(h2("2.3  Delete Operations"))
+story.append(h3("Delete at Head — O(1)"))
+story.append(CppBlock([
+    "int deleteAtHead() {",
+    "    if (!head) throw underflow_error(\"List empty\");",
+    "    ListNode* tmp = head;",
+    "    int val = tmp->val;",
+    "    head = head->next;   // advance head",
+    "    delete tmp;          // free old head",
+    "    _size--;",
+    "    return val;",
+    "}",
+    "// Time: O(1)   Space: O(1)",
+]))
+story.append(sp(0.5))
+
+story.append(h3("Delete at Position k — O(k)"))
+story.append(CppBlock([
+    "int deleteAt(int pos) {",
+    "    if (pos < 0 || pos >= _size) throw out_of_range(\"Invalid pos\");",
+    "    if (pos == 0) return deleteAtHead();",
+    "    ListNode* curr = head;",
+    "    for (int i = 0; i < pos - 1; i++)     // stop at node BEFORE pos",
+    "        curr = curr->next;",
+    "    ListNode* toDelete = curr->next;",
+    "    int val = toDelete->val;",
+    "    curr->next = toDelete->next;            // bypass the deleted node",
+    "    delete toDelete;",
+    "    _size--;",
+    "    return val;",
+    "}",
+    "// Time: O(pos)   Space: O(1)",
+]))
+story.append(sp(0.5))
+
+story.append(h3("Delete Node with Given Value — O(n)"))
+story.append(CppBlock([
+    "// LC 203 — Remove Linked List Elements",
+    "ListNode* removeElements(ListNode* head, int val) {",
+    "    ListNode dummy(0, head);           // dummy node before head",
+    "    ListNode* curr = &dummy;",
+    "    while (curr->next) {",
+    "        if (curr->next->val == val) {",
+    "            ListNode* tmp = curr->next;",
+    "            curr->next = tmp->next;    // bypass",
+    "            delete tmp;",
+    "        } else {",
+    "            curr = curr->next;",
+    "        }",
+    "    }",
+    "    return dummy.next;",
+    "}",
+    "// Dummy node simplifies edge case: deleting head",
     "// Time: O(n)   Space: O(1)",
 ]))
 story.append(sp(0.8))
 
-story.append(h2("3.2  Remove Duplicates from Sorted Array  (LC 26)"))
-story.append(body(
-    "Slow pointer tracks the position to write the next unique element. "
-    "Fast scans; when arr[fast] != arr[slow-1], it's a new unique — write it."
-))
-story.append(CppCodeBlock([
-    "int removeDuplicates(vector<int>& nums) {",
-    "    if (nums.empty()) return 0;",
-    "    int slow = 1;                    // first element always unique",
-    "    for (int fast = 1; fast < nums.size(); fast++) {",
-    "        if (nums[fast] != nums[slow - 1]) {  // new unique found",
-    "            nums[slow] = nums[fast];",
-    "            slow++;",
-    "        }",
+story.append(h2("2.4  Traversal & Search"))
+story.append(CppBlock([
+    "// Forward traversal — O(n)",
+    "void printList(ListNode* head) {",
+    "    ListNode* curr = head;",
+    "    while (curr) {",
+    "        cout << curr->val;",
+    "        if (curr->next) cout << \" -> \";",
+    "        curr = curr->next;",
     "    }",
-    "    return slow;   // new length",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("3.3  Move Zeroes  (LC 283)"))
-story.append(body(
-    "Move all zeroes to the end while preserving relative order of non-zero elements. "
-    "Slow pointer is the insertion position for non-zeroes."
-))
-story.append(CppCodeBlock([
-    "void moveZeroes(vector<int>& nums) {",
-    "    int slow = 0;",
-    "    // Phase 1: copy all non-zeroes to front",
-    "    for (int fast = 0; fast < nums.size(); fast++) {",
-    "        if (nums[fast] != 0) {",
-    "            nums[slow++] = nums[fast];",
-    "        }",
-    "    }",
-    "    // Phase 2: fill rest with 0",
-    "    while (slow < nums.size()) nums[slow++] = 0;",
+    "    cout << \" -> NULL\" << endl;",
     "}",
     "",
-    "// Alternative: swap version (preserves relative order of 0s too)",
-    "void moveZeroesSwap(vector<int>& nums) {",
-    "    int slow = 0;",
-    "    for (int fast = 0; fast < nums.size(); fast++) {",
-    "        if (nums[fast] != 0)",
-    "            swap(nums[slow++], nums[fast]);",
+    "// Search — O(n)",
+    "ListNode* search(ListNode* head, int target) {",
+    "    ListNode* curr = head;",
+    "    while (curr) {",
+    "        if (curr->val == target) return curr;",
+    "        curr = curr->next;",
     "    }",
+    "    return nullptr;   // not found",
+    "}",
+    "",
+    "// Length — O(n)",
+    "int length(ListNode* head) {",
+    "    int cnt = 0;",
+    "    for (ListNode* c = head; c; c = c->next) cnt++;",
+    "    return cnt;",
+    "}",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 3 — DOUBLY LINKED LIST
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("3","Doubly Linked List — Full Implementation",BLUE,TEAL))
+story.append(sp(1))
+
+story.append(h2("3.1  Node Structure & Memory Layout"))
+story.append(NodeDiagram(
+    ["10","20","30","40"],
+    highlights={0:(NAVY,"head"), 3:(RED,"tail")},
+    label="Doubly Linked List — each node has prev and next pointers",
+    color=BLUE, doubly=True
+))
+story.append(sp(0.5))
+story.append(CppBlock([
+    "struct DNode {",
+    "    int val;",
+    "    DNode* prev;",
+    "    DNode* next;",
+    "    DNode(int v) : val(v), prev(nullptr), next(nullptr) {}",
+    "};",
+    "",
+    "class DoublyLinkedList {",
+    "    DNode* head;",
+    "    DNode* tail;",
+    "    int _size;",
+    "public:",
+    "    DoublyLinkedList() : head(nullptr), tail(nullptr), _size(0) {}",
+    "};",
+]))
+story.append(sp(0.8))
+
+story.append(h2("3.2  Insert Operations"))
+story.append(CppBlock([
+    "// Insert at HEAD — O(1)",
+    "void insertFront(int val) {",
+    "    DNode* node = new DNode(val);",
+    "    if (!head) { head = tail = node; }",
+    "    else {",
+    "        node->next = head;   // new->next = old head",
+    "        head->prev = node;   // old head->prev = new",
+    "        head = node;         // update head",
+    "    }",
+    "    _size++;",
+    "}",
+    "",
+    "// Insert at TAIL — O(1) with tail pointer",
+    "void insertBack(int val) {",
+    "    DNode* node = new DNode(val);",
+    "    if (!tail) { head = tail = node; }",
+    "    else {",
+    "        tail->next = node;   // old tail->next = new",
+    "        node->prev = tail;   // new->prev = old tail",
+    "        tail = node;         // update tail",
+    "    }",
+    "    _size++;",
+    "}",
+    "",
+    "// Insert AFTER a given node — O(1) if node is known",
+    "void insertAfter(DNode* node, int val) {",
+    "    if (!node) return;",
+    "    DNode* newNode = new DNode(val);",
+    "    newNode->next = node->next;",
+    "    newNode->prev = node;",
+    "    if (node->next) node->next->prev = newNode;",
+    "    else            tail = newNode;   // new node is new tail",
+    "    node->next = newNode;",
+    "    _size++;",
+    "}",
+]))
+story.append(sp(0.8))
+
+story.append(h2("3.3  Delete Operations"))
+story.append(CppBlock([
+    "// Delete a given NODE — O(1) if pointer is known",
+    "void deleteNode(DNode* node) {",
+    "    if (!node) return;",
+    "    if (node->prev) node->prev->next = node->next;  // bypass backward",
+    "    else            head = node->next;               // deleting head",
+    "    if (node->next) node->next->prev = node->prev;  // bypass forward",
+    "    else            tail = node->prev;               // deleting tail",
+    "    delete node;",
+    "    _size--;",
+    "}",
+    "// KEY ADVANTAGE over SLL: O(1) delete when node pointer is known",
+    "// SLL needs O(n) to find the predecessor",
+    "",
+    "// Delete from FRONT — O(1)",
+    "int deleteFront() {",
+    "    if (!head) throw underflow_error(\"Empty list\");",
+    "    DNode* tmp = head;",
+    "    int val = tmp->val;",
+    "    head = head->next;",
+    "    if (head) head->prev = nullptr;",
+    "    else      tail = nullptr;   // list became empty",
+    "    delete tmp; _size--;",
+    "    return val;",
+    "}",
+    "",
+    "// Delete from BACK — O(1)",
+    "int deleteBack() {",
+    "    if (!tail) throw underflow_error(\"Empty list\");",
+    "    DNode* tmp = tail;",
+    "    int val = tmp->val;",
+    "    tail = tail->prev;",
+    "    if (tail) tail->next = nullptr;",
+    "    else      head = nullptr;",
+    "    delete tmp; _size--;",
+    "    return val;",
+    "}",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 4 — CIRCULAR LINKED LIST
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("4","Circular Linked List",GOLD,TEAL))
+story.append(sp(1))
+
+story.append(h2("4.1  Singly Circular Linked List"))
+story.append(NodeDiagram(
+    ["10","20","30","40"],
+    highlights={0:(GOLD,"head")},
+    label="Circular SLL — last node's next points back to head (no NULL)",
+    color=GOLD, circular=True
+))
+story.append(sp(0.5))
+story.append(CppBlock([
+    "struct CNode { int val; CNode* next; CNode(int v): val(v), next(nullptr){} };",
+    "",
+    "class CircularSLL {",
+    "    CNode* tail;   // Keep TAIL pointer (tail->next = head)",
+    "    int _size;",
+    "public:",
+    "    CircularSLL() : tail(nullptr), _size(0) {}",
+    "",
+    "    void insertFront(int val) {",
+    "        CNode* node = new CNode(val);",
+    "        if (!tail) { node->next = node; tail = node; }  // only node",
+    "        else {",
+    "            node->next = tail->next;   // new->next = head",
+    "            tail->next = node;         // tail->next = new (becomes head)",
+    "        }",
+    "        _size++;",
+    "    }",
+    "    void insertBack(int val) {",
+    "        insertFront(val);              // insert, then advance tail",
+    "        tail = tail->next;",
+    "    }",
+    "    void traverse() {",
+    "        if (!tail) return;",
+    "        CNode* curr = tail->next;      // start from head",
+    "        do {",
+    "            cout << curr->val << \" \";",
+    "            curr = curr->next;",
+    "        } while (curr != tail->next);  // stop when back at head",
+    "        cout << endl;",
+    "    }",
+    "};",
+    "// Key: use do-while loop (not while) since we start at head",
+]))
+story.append(sp(0.8))
+
+story.append(h2("4.2  Josephus Problem — Classic Circular LL Application"))
+story.append(body(
+    "n people in a circle; every k-th person is eliminated. Find the last survivor's position. "
+    "Model with circular linked list: traverse k steps, remove node, repeat until 1 remains."
+))
+story.append(CppBlock([
+    "// Josephus: n people, every k-th eliminated. Returns 0-indexed survivor position.",
+    "int josephus(int n, int k) {",
+    "    // Mathematical O(n) solution (no list needed)",
+    "    int pos = 0;                    // survivor position with 1 person",
+    "    for (int i = 2; i <= n; i++)",
+    "        pos = (pos + k) % i;        // recurrence relation",
+    "    return pos;                     // 0-indexed position",
+    "}",
+    "",
+    "// Simulation with circular linked list — O(nk)",
+    "int josephusSim(int n, int k) {",
+    "    list<int> circle;",
+    "    for (int i = 1; i <= n; i++) circle.push_back(i);",
+    "    auto it = circle.begin();",
+    "    while (circle.size() > 1) {",
+    "        for (int i = 1; i < k; i++) {",
+    "            it++;",
+    "            if (it == circle.end()) it = circle.begin();",
+    "        }",
+    "        it = circle.erase(it);",
+    "        if (it == circle.end()) it = circle.begin();",
+    "    }",
+    "    return circle.front();",
+    "}",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 5 — XOR LINKED LIST
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("5","XOR Linked List — Memory-Efficient Doubly LL",PURPLE,TEAL))
+story.append(sp(1))
+
+story.append(h2("5.1  Core Concept"))
+story.append(body(
+    "A normal doubly linked list stores two pointers per node (16 bytes on 64-bit). "
+    "An <b>XOR Linked List</b> stores only one pointer per node: the <b>XOR of prev and next addresses</b>. "
+    "This halves pointer memory. To navigate: XOR the known neighbor address with the stored value to get the other."
+))
+story.append(sp(0.5))
+story.append(InfoBox([
+    "node->both = XOR(prev_addr, next_addr)",
+    "To get next: next = XOR(node->both, prev_addr)",
+    "To get prev: prev = XOR(node->both, next_addr)",
+    "XOR properties: A^A=0, A^0=A, A^B^A=B  →  (prev^next)^prev = next",
+],title="🔑 XOR Trick",color=PURPLE,bg=PURPLE_BG))
+story.append(sp(0.5))
+story.append(CppBlock([
+    "#include <cstdint>",
+    "",
+    "struct XorNode {",
+    "    int val;",
+    "    XorNode* both;   // stores XOR(prev, next)",
+    "    XorNode(int v) : val(v), both(nullptr) {}",
+    "};",
+    "",
+    "// Helper: XOR two pointers safely",
+    "XorNode* XOR(XorNode* a, XorNode* b) {",
+    "    return (XorNode*)((uintptr_t)a ^ (uintptr_t)b);",
+    "}",
+    "",
+    "// Insert at head",
+    "XorNode* insertFront(XorNode* head, int val) {",
+    "    XorNode* node = new XorNode(val);",
+    "    node->both = XOR(nullptr, head);   // prev=NULL, next=head",
+    "    if (head) head->both = XOR(node, XOR(nullptr, head->both));",
+    "    return node;   // new head",
+    "}",
+    "",
+    "// Traverse forward",
+    "void traverse(XorNode* head) {",
+    "    XorNode* prev = nullptr;",
+    "    XorNode* curr = head;",
+    "    while (curr) {",
+    "        cout << curr->val << \" \";",
+    "        XorNode* next = XOR(prev, curr->both);",
+    "        prev = curr;",
+    "        curr = next;",
+    "    }",
+    "}",
+    "// Space: O(1) pointer overhead vs DLL's O(2) per node",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 6 — TWO POINTER TECHNIQUES
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("6","Two Pointer Techniques on Linked Lists",RED,TEAL))
+story.append(sp(1))
+
+story.append(h2("6.1  Find Middle Node  (LC 876)  — Easy"))
+story.append(body(
+    "Use fast and slow pointers. Slow moves 1 step, fast moves 2. "
+    "When fast reaches end, slow is at middle. "
+    "For even-length lists, returns the <b>second</b> middle."
+))
+story.append(NodeDiagram(
+    ["1","2","3","4","5"],
+    highlights={2:(GREEN,(GREEN,"slow=mid")), 4:(RED,(RED,"fast=end"))},
+    label="slow at middle (index 2) when fast reaches end (index 4)",
+    color=TEAL
+))
+story.append(sp(0.3))
+story.append(CppBlock([
+    "// LC 876 — Middle of the Linked List",
+    "ListNode* middleNode(ListNode* head) {",
+    "    ListNode* slow = head;",
+    "    ListNode* fast = head;",
+    "    while (fast && fast->next) {",
+    "        slow = slow->next;         // move 1 step",
+    "        fast = fast->next->next;   // move 2 steps",
+    "    }",
+    "    return slow;   // slow is at middle",
     "}",
     "// Time: O(n)   Space: O(1)",
+    "// For [1,2,3,4,5]  → returns node 3 (index 2)",
+    "// For [1,2,3,4]    → returns node 3 (second middle)",
 ]))
 story.append(sp(0.8))
 
-story.append(h2("3.4  Is Subsequence  (LC 392)"))
+story.append(h2("6.2  Remove Nth Node From End  (LC 19)  — Medium"))
 story.append(body(
-    "Check if string s is a subsequence of t. Use two pointers: i on s, j on t. "
-    "Advance j always; advance i only when t[j] == s[i]. If i reaches end of s → true."
+    "Move fast pointer n+1 steps ahead, then advance both until fast hits NULL. "
+    "Slow is now at the node <b>before</b> the target — unlink target."
 ))
-story.append(CppCodeBlock([
-    "bool isSubsequence(string s, string t) {",
-    "    int i = 0, j = 0;",
-    "    while (i < s.size() && j < t.size()) {",
-    "        if (s[i] == t[j]) i++;  // matched one char of s",
-    "        j++;                    // always advance t",
+story.append(CppBlock([
+    "ListNode* removeNthFromEnd(ListNode* head, int n) {",
+    "    ListNode dummy(0, head);",
+    "    ListNode* fast = &dummy;",
+    "    ListNode* slow = &dummy;",
+    "    // Advance fast n+1 steps (slow will stop BEFORE the target)",
+    "    for (int i = 0; i <= n; i++) fast = fast->next;",
+    "    // Move both until fast reaches NULL",
+    "    while (fast) {",
+    "        slow = slow->next;",
+    "        fast = fast->next;",
     "    }",
-    "    return i == s.size();  // matched all of s?",
+    "    // slow->next is the node to delete",
+    "    ListNode* toDelete = slow->next;",
+    "    slow->next = toDelete->next;",
+    "    delete toDelete;",
+    "    return dummy.next;",
     "}",
-    "// Time: O(|s| + |t|)   Space: O(1)",
+    "// Time: O(n)   Space: O(1)  — single pass",
 ]))
 story.append(sp(0.8))
 
-story.append(h2("3.5  Merge Sorted Array  (LC 88)"))
+story.append(h2("6.3  Detect Cycle — Floyd's Algorithm  (LC 141/142)"))
 story.append(body(
-    "Merge nums2 into nums1 in-place. <b>Key trick: start from the end</b> to avoid overwriting. "
-    "Three pointers: p1 at end of nums1's data, p2 at end of nums2, p at end of merged."
+    "Floyd's Tortoise and Hare: slow moves 1 step, fast moves 2. "
+    "If a cycle exists, they will eventually meet inside the cycle. "
+    "<b>Phase 2:</b> reset one pointer to head, move both 1 step — they meet at cycle entry."
 ))
-story.append(CppCodeBlock([
-    "void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {",
-    "    int p1 = m - 1;         // pointer in nums1 data",
-    "    int p2 = n - 1;         // pointer in nums2",
-    "    int p  = m + n - 1;     // write position (end)",
-    "    while (p1 >= 0 && p2 >= 0) {",
-    "        if (nums1[p1] > nums2[p2])",
-    "            nums1[p--] = nums1[p1--];",
-    "        else",
-    "            nums1[p--] = nums2[p2--];",
+story.append(NodeDiagram(
+    ["3","1","2","4","5"],
+    highlights={
+        0:(TEAL,(TEAL,"head")),
+        2:(GREEN,(GREEN,"slow")),
+        4:(RED,(RED,"fast")),
+    },
+    label="Floyd's: slow and fast will meet inside the cycle",
+    color=TEAL
+))
+story.append(sp(0.3))
+story.append(CppBlock([
+    "// LC 141 — Linked List Cycle (detect)",
+    "bool hasCycle(ListNode* head) {",
+    "    ListNode* slow = head;",
+    "    ListNode* fast = head;",
+    "    while (fast && fast->next) {",
+    "        slow = slow->next;",
+    "        fast = fast->next->next;",
+    "        if (slow == fast) return true;   // cycle detected",
     "    }",
-    "    // Copy remaining nums2 (nums1 leftover already in place)",
-    "    while (p2 >= 0)",
-    "        nums1[p--] = nums2[p2--];",
+    "    return false;   // fast reached NULL — no cycle",
+    "}",
+    "// Time: O(n)   Space: O(1)",
+    "",
+    "// LC 142 — Find ENTRY POINT of cycle",
+    "ListNode* detectCycle(ListNode* head) {",
+    "    ListNode* slow = head, *fast = head;",
+    "    // Phase 1: detect meeting point",
+    "    while (fast && fast->next) {",
+    "        slow = slow->next;",
+    "        fast = fast->next->next;",
+    "        if (slow == fast) break;",
+    "    }",
+    "    if (!fast || !fast->next) return nullptr;  // no cycle",
+    "    // Phase 2: find entry — reset slow to head, move both 1 step",
+    "    slow = head;",
+    "    while (slow != fast) {",
+    "        slow = slow->next;",
+    "        fast = fast->next;",
+    "    }",
+    "    return slow;   // cycle entry point",
+    "}",
+    "// Proof: if cycle starts at distance F from head, and cycle length C",
+    "// meeting point is at distance C - (F % C) from entry",
+    "// resetting slow to head and stepping both by 1 aligns them at entry",
+]))
+story.append(sp(0.8))
+
+story.append(h2("6.4  Intersection of Two Linked Lists  (LC 160)  — Easy"))
+story.append(body(
+    "Find the node where two lists merge. Trick: traverse both lists. "
+    "When a pointer reaches its end, redirect it to the <b>other</b> list's head. "
+    "After at most m+n steps they meet at the intersection (or both at NULL if none)."
+))
+story.append(CppBlock([
+    "ListNode* getIntersectionNode(ListNode* headA, ListNode* headB) {",
+    "    ListNode* a = headA;",
+    "    ListNode* b = headB;",
+    "    // Each pointer traverses: own list + other list",
+    "    // Total distance same for both: lenA + lenB",
+    "    while (a != b) {",
+    "        a = a ? a->next : headB;   // redirect to B when A ends",
+    "        b = b ? b->next : headA;   // redirect to A when B ends",
+    "    }",
+    "    return a;   // intersection node, or nullptr if none",
     "}",
     "// Time: O(m+n)   Space: O(1)",
+    "// If no intersection: both become nullptr simultaneously → loop ends",
 ]))
-
 story.append(PageBreak())
 
-# ════════════════════════════════════════════════════════════
-#  SECTION 4 — DUTCH NATIONAL FLAG
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("4", "Two Pointers — Dutch National Flag", PURPLE, BLUE))
+# ══════════════════════════════════════════════════════════════
+#  SECTION 7 — REVERSAL PATTERNS
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("7","Reversal Patterns",ORANGE,TEAL))
 story.append(sp(1))
 
-story.append(h2("4.1  Three-Way Partition Template"))
+story.append(h2("7.1  Reverse Full List  (LC 206)  — Easy"))
 story.append(body(
-    "Partition an array with <b>three distinct values</b> (e.g. 0, 1, 2) into three sections "
-    "in a single pass. Uses three pointers: <b>lo</b> (boundary of 0s), "
-    "<b>mid</b> (current element), <b>hi</b> (boundary of 2s). "
-    "All elements in [lo, mid) are 0, [mid, hi] are 1, (hi, n-1] are 2."
+    "Three-pointer iterative reversal: prev, curr, next. "
+    "At each step, redirect curr->next to prev, then advance all three. "
+    "The most fundamental linked list operation."
 ))
-story.append(sp(0.5))
-story.append(VisualBox(
-    ["0","0","1","1","1","2","2"],
-    {1: "lo", 4: "mid", 5: "hi"},
-    label="Invariant after sort: 0s | 1s | 2s",
-    color=PURPLE
-))
-story.append(sp(0.5))
-story.append(CppCodeBlock([
-    "// ── DUTCH NATIONAL FLAG TEMPLATE ────────────────────────",
-    "int lo = 0, mid = 0, hi = n - 1;",
-    "while (mid <= hi) {",
-    "    if (arr[mid] == LOW_VAL) {",
-    "        swap(arr[lo], arr[mid]);",
-    "        lo++;  mid++;          // both advance: arr[lo] was 1 (already seen)",
-    "    } else if (arr[mid] == MID_VAL) {",
-    "        mid++;                 // 1 is in correct region, just advance",
-    "    } else {                   // arr[mid] == HIGH_VAL",
-    "        swap(arr[mid], arr[hi]);",
-    "        hi--;                  // do NOT advance mid (swapped val unknown)",
-    "    }",
-    "}",
-]))
-story.append(sp(0.8))
-
-story.append(h2("4.2  Sort Colors  (LC 75)"))
-story.append(CppCodeBlock([
-    "void sortColors(vector<int>& nums) {",
-    "    int lo = 0, mid = 0, hi = nums.size() - 1;",
-    "    while (mid <= hi) {",
-    "        if (nums[mid] == 0) {",
-    "            swap(nums[lo++], nums[mid++]);",
-    "        } else if (nums[mid] == 1) {",
-    "            mid++;",
-    "        } else {               // nums[mid] == 2",
-    "            swap(nums[mid], nums[hi--]);",
-    "            // DON'T mid++ — swapped element needs checking",
-    "        }",
-    "    }",
-    "}",
-    "// Time: O(n)   Space: O(1)  — single pass only",
-]))
-story.append(sp(0.5))
-story.append(InfoBox([
-    "Why NOT increment mid after swapping with hi?",
-    "When we swap arr[mid] with arr[hi], the new arr[mid] came from hi — it has not been examined yet.",
-    "If we incremented mid, we would skip checking this newly placed element.",
-    "But when we swap with lo, arr[lo] must have been 1 (since mid >= lo always), so it is safe to advance both.",
-], title="🔑 Critical Insight", color=PURPLE, bg=PURPLE_BG))
-
-story.append(PageBreak())
-
-# ════════════════════════════════════════════════════════════
-#  SECTION 5 — PALINDROME PATTERNS
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("5", "Two Pointers — Palindrome Patterns", RED, ORANGE))
-story.append(sp(1))
-
-story.append(h2("5.1  Valid Palindrome  (LC 125)"))
-story.append(body(
-    "A phrase is a palindrome if, after converting to lowercase and removing non-alphanumeric characters, "
-    "it reads the same forward and backward. Classic opposite-ends two-pointer."
-))
-story.append(CppCodeBlock([
-    "#include <cctype>",
-    "",
-    "bool isPalindrome(string s) {",
-    "    int l = 0, r = s.size() - 1;",
-    "    while (l < r) {",
-    "        // Skip non-alphanumeric from both ends",
-    "        while (l < r && !isalnum(s[l])) l++;",
-    "        while (l < r && !isalnum(s[r])) r--;",
-    "        if (tolower(s[l]) != tolower(s[r])) return false;",
-    "        l++;  r--;",
-    "    }",
-    "    return true;",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("5.2  Valid Palindrome II  (LC 680)"))
-story.append(body(
-    "Can you make a string palindrome by removing <b>at most one</b> character? "
-    "When pointers mismatch, try skipping either s[l] or s[r] and check if the rest is a palindrome."
-))
-story.append(CppCodeBlock([
-    "bool checkPalin(string& s, int l, int r) {",
-    "    while (l < r) {",
-    "        if (s[l] != s[r]) return false;",
-    "        l++; r--;",
-    "    }",
-    "    return true;",
-    "}",
-    "",
-    "bool validPalindrome(string s) {",
-    "    int l = 0, r = s.size() - 1;",
-    "    while (l < r) {",
-    "        if (s[l] != s[r])",
-    "            // Try deleting either character",
-    "            return checkPalin(s, l+1, r) || checkPalin(s, l, r-1);",
-    "        l++;  r--;",
-    "    }",
-    "    return true;   // already palindrome",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-
-story.append(PageBreak())
-
-# ════════════════════════════════════════════════════════════
-#  SECTION 6 — FIXED SLIDING WINDOW
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("6", "Sliding Window — Fixed Size", TEAL, BLUE))
-story.append(sp(1))
-
-story.append(h2("6.1  Core Template"))
-story.append(body(
-    "Maintain a window of exactly size <b>k</b>. "
-    "Build the first window, then slide: <b>add arr[r] and remove arr[r-k]</b> each step. "
-    "This avoids re-summing the whole window — O(1) per slide."
-))
-story.append(VisualBox(
-    ["2","1","5","1","3","2"],
-    {0: "l", 2: "r"},
-    label="Fixed window k=3: [2,1,5] → slide → [1,5,1] → ...",
+story.append(NodeDiagram(
+    ["1","2","3","4","5"],
+    highlights={0:(TEAL,(TEAL,"head"))},
+    label="Before reversal: 1→2→3→4→5→NULL",
     color=TEAL
 ))
-story.append(sp(0.5))
-story.append(CppCodeBlock([
-    "// ── FIXED WINDOW TEMPLATE ───────────────────────────────",
-    "int windowVal = 0;",
-    "// Build first window",
-    "for (int i = 0; i < k; i++) windowVal += arr[i];",
-    "int best = windowVal;",
-    "// Slide window",
-    "for (int r = k; r < n; r++) {",
-    "    windowVal += arr[r];           // add new right element",
-    "    windowVal -= arr[r - k];       // remove old left element",
-    "    best = max(best, windowVal);   // update answer",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("6.2  Maximum Average Subarray I  (LC 643)"))
-story.append(CppCodeBlock([
-    "double findMaxAverage(vector<int>& nums, int k) {",
-    "    double windowSum = 0;",
-    "    for (int i = 0; i < k; i++) windowSum += nums[i];",
-    "    double maxSum = windowSum;",
-    "    for (int r = k; r < nums.size(); r++) {",
-    "        windowSum += nums[r] - nums[r - k];",
-    "        maxSum = max(maxSum, windowSum);",
-    "    }",
-    "    return maxSum / k;",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("6.3  First Negative Number in Every Window of Size K"))
-story.append(CppCodeBlock([
-    "vector<int> firstNegative(vector<int>& arr, int k) {",
-    "    deque<int> dq;     // stores indices of negative numbers",
-    "    vector<int> result;",
-    "    int n = arr.size();",
-    "    for (int r = 0; r < n; r++) {",
-    "        // Add new negative to deque",
-    "        if (arr[r] < 0) dq.push_back(r);",
-    "        // Remove elements outside window",
-    "        if (!dq.empty() && dq.front() <= r - k) dq.pop_front();",
-    "        // Record answer once window is full",
-    "        if (r >= k - 1) {",
-    "            result.push_back(dq.empty() ? 0 : arr[dq.front()]);",
-    "        }",
-    "    }",
-    "    return result;",
-    "}",
-    "// Time: O(n)   Space: O(k)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("6.4  Count Occurrences of Anagrams  (LC 438)"))
-story.append(body(
-    "Fixed window of size p.length(). Use a frequency map. "
-    "When window's freq map equals p's freq map → anagram found."
+story.append(sp(0.2))
+story.append(NodeDiagram(
+    ["5","4","3","2","1"],
+    highlights={0:(RED,(RED,"new head"))},
+    label="After reversal:  5→4→3→2→1→NULL",
+    color=RED
 ))
-story.append(CppCodeBlock([
-    "vector<int> findAnagrams(string s, string p) {",
-    "    if (s.size() < p.size()) return {};",
-    "    vector<int> pCount(26, 0), wCount(26, 0), result;",
-    "    int k = p.size();",
-    "    // Build freq maps for p and first window",
+story.append(sp(0.3))
+story.append(CppBlock([
+    "// LC 206 — Reverse Linked List",
+    "ListNode* reverseList(ListNode* head) {",
+    "    ListNode* prev = nullptr;",
+    "    ListNode* curr = head;",
+    "    while (curr) {",
+    "        ListNode* nextTmp = curr->next;  // save next",
+    "        curr->next = prev;               // reverse link",
+    "        prev = curr;                     // advance prev",
+    "        curr = nextTmp;                  // advance curr",
+    "    }",
+    "    return prev;   // prev is new head",
+    "}",
+    "// Time: O(n)   Space: O(1)",
+    "",
+    "// Recursive version",
+    "ListNode* reverseListRec(ListNode* head) {",
+    "    if (!head || !head->next) return head;  // base case",
+    "    ListNode* newHead = reverseListRec(head->next);",
+    "    head->next->next = head;   // reverse the link",
+    "    head->next = nullptr;      // disconnect original link",
+    "    return newHead;",
+    "}",
+    "// Recursive: Time O(n)   Space O(n) stack frames",
+]))
+story.append(sp(0.8))
+
+story.append(h2("7.2  Reverse Between L and R  (LC 92)  — Medium"))
+story.append(body(
+    "Reverse only the sublist from position left to right (1-indexed). "
+    "Use a dummy node; find the node just before left, then reverse the segment."
+))
+story.append(CppBlock([
+    "ListNode* reverseBetween(ListNode* head, int left, int right) {",
+    "    ListNode dummy(0, head);",
+    "    ListNode* pre = &dummy;",
+    "    // Step 1: advance pre to node just BEFORE left",
+    "    for (int i = 1; i < left; i++) pre = pre->next;",
+    "    ListNode* curr = pre->next;   // first node to reverse",
+    "    // Step 2: reverse (right - left) times",
+    "    for (int i = 0; i < right - left; i++) {",
+    "        ListNode* nxt = curr->next;",
+    "        curr->next = nxt->next;        // remove nxt from its position",
+    "        nxt->next  = pre->next;        // insert nxt at front of sublist",
+    "        pre->next  = nxt;",
+    "    }",
+    "    return dummy.next;",
+    "}",
+    "// Time: O(n)   Space: O(1)  — single pass, in-place",
+]))
+story.append(sp(0.8))
+
+story.append(h2("7.3  Reverse Nodes in K-Groups  (LC 25)  — Hard"))
+story.append(body(
+    "Reverse the list in groups of k. If remaining nodes &lt; k, leave them as-is. "
+    "Strategy: check if k nodes exist ahead, reverse the group, recurse on the rest."
+))
+story.append(CppBlock([
+    "ListNode* reverseKGroup(ListNode* head, int k) {",
+    "    // Check if k nodes remain",
+    "    ListNode* curr = head;",
     "    for (int i = 0; i < k; i++) {",
-    "        pCount[p[i] - 'a']++;",
-    "        wCount[s[i] - 'a']++;",
+    "        if (!curr) return head;   // fewer than k nodes — don't reverse",
+    "        curr = curr->next;",
     "    }",
-    "    if (pCount == wCount) result.push_back(0);",
-    "    // Slide window",
-    "    for (int r = k; r < s.size(); r++) {",
-    "        wCount[s[r] - 'a']++;           // add right",
-    "        wCount[s[r - k] - 'a']--;       // remove left",
-    "        if (pCount == wCount) result.push_back(r - k + 1);",
+    "    // Reverse k nodes starting from head",
+    "    ListNode* prev = nullptr;",
+    "    ListNode* node = head;",
+    "    for (int i = 0; i < k; i++) {",
+    "        ListNode* nxt = node->next;",
+    "        node->next = prev;",
+    "        prev = node;",
+    "        node = nxt;",
     "    }",
-    "    return result;",
+    "    // head is now the tail of reversed segment",
+    "    // Recurse on remaining list and connect",
+    "    head->next = reverseKGroup(node, k);",
+    "    return prev;   // prev is new head of this segment",
     "}",
-    "// Time: O(n)   Space: O(1) — fixed 26-char arrays",
+    "// Time: O(n)   Space: O(n/k) recursive calls",
 ]))
-
 story.append(PageBreak())
 
-# ════════════════════════════════════════════════════════════
-#  SECTION 7 — VARIABLE SLIDING WINDOW
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("7", "Sliding Window — Variable Size", BLUE, PURPLE))
+# ══════════════════════════════════════════════════════════════
+#  SECTION 8 — MERGE & SORT
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("8","Merge & Sort Patterns",GREEN,TEAL))
 story.append(sp(1))
 
-story.append(h2("7.1  Core Template — Expand Right, Shrink Left"))
+story.append(h2("8.1  Merge Two Sorted Lists  (LC 21)  — Easy"))
 story.append(body(
-    "Expand the right boundary freely. When the window becomes <b>invalid</b>, "
-    "shrink from the left until it's valid again. At every step, the window [l, r] is valid "
-    "so we can update the answer. This gives O(n) because each pointer moves at most n times."
+    "Classic two-pointer merge. Use a dummy head node to simplify logic. "
+    "Compare heads of both lists, attach the smaller, advance that pointer. "
+    "Attach remaining nodes at the end."
 ))
-story.append(CppCodeBlock([
-    "// ── VARIABLE WINDOW TEMPLATE ────────────────────────────",
-    "int l = 0, best = 0;",
-    "// some data structure to track window state",
-    "for (int r = 0; r < n; r++) {",
-    "    // 1. Expand: add arr[r] to window",
-    "    add_to_window(arr[r]);",
-    "",
-    "    // 2. Shrink: while window is INVALID, move l right",
-    "    while (window_is_invalid()) {",
-    "        remove_from_window(arr[l]);",
-    "        l++;",
-    "    }",
-    "    // 3. Window [l..r] is now valid — update answer",
-    "    best = max(best, r - l + 1);",
-    "}",
-    "return best;",
-    "// Time: O(n)  — each element enters and leaves window once",
-    "// Space: O(window size) for tracking structure",
-]))
-story.append(sp(0.8))
-
-story.append(h2("7.2  Longest Substring Without Repeating Characters  (LC 3)"))
-story.append(body(
-    "Window is invalid when a character appears more than once. "
-    "Use a hash set or last-seen map to track characters in the current window."
-))
-story.append(CppCodeBlock([
-    "int lengthOfLongestSubstring(string s) {",
-    "    unordered_map<char, int> lastSeen;  // char -> last seen index",
-    "    int l = 0, best = 0;",
-    "    for (int r = 0; r < s.size(); r++) {",
-    "        // If char was seen and is inside current window",
-    "        if (lastSeen.count(s[r]) && lastSeen[s[r]] >= l) {",
-    "            l = lastSeen[s[r]] + 1;  // jump l past the duplicate",
+story.append(CppBlock([
+    "ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {",
+    "    ListNode dummy(0);",
+    "    ListNode* curr = &dummy;",
+    "    while (l1 && l2) {",
+    "        if (l1->val <= l2->val) {",
+    "            curr->next = l1;",
+    "            l1 = l1->next;",
+    "        } else {",
+    "            curr->next = l2;",
+    "            l2 = l2->next;",
     "        }",
-    "        lastSeen[s[r]] = r;",
-    "        best = max(best, r - l + 1);",
+    "        curr = curr->next;",
     "    }",
-    "    return best;",
+    "    curr->next = l1 ? l1 : l2;   // attach remaining",
+    "    return dummy.next;",
     "}",
-    "// Time: O(n)   Space: O(min(n, charset_size))",
+    "// Time: O(m+n)   Space: O(1)  — iterative, no extra memory",
+    "",
+    "// Recursive version",
+    "ListNode* mergeTwoListsRec(ListNode* l1, ListNode* l2) {",
+    "    if (!l1) return l2;",
+    "    if (!l2) return l1;",
+    "    if (l1->val <= l2->val) { l1->next = mergeTwoListsRec(l1->next, l2); return l1; }",
+    "    else                    { l2->next = mergeTwoListsRec(l1, l2->next); return l2; }",
+    "}",
+    "// Recursive: Space O(m+n) stack",
 ]))
-story.append(sp(0.5))
-story.append(InfoBox([
-    "Alternative using set: add s[r], while s[r] in set -> remove s[l], l++",
-    "The map version is faster: jump l directly to lastSeen[s[r]]+1 without one-by-one shrinking",
-    "Edge case: only jump l if lastSeen[s[r]] >= l (char was seen but before current window is OK)",
-], title="💡 Two Implementations", color=BLUE, bg=LIGHT))
 story.append(sp(0.8))
 
-story.append(h2("7.3  Minimum Window Substring  (LC 76)  — Hard"))
+story.append(h2("8.2  Merge K Sorted Lists  (LC 23)  — Hard"))
 story.append(body(
-    "Find the smallest substring of s that contains all characters of t (with frequency). "
-    "<b>Strategy:</b> use two frequency maps and a counter 'have' vs 'need'. "
-    "Expand right until window is valid (have == need), then shrink left to minimise."
+    "Three approaches: (1) Brute force: collect all, sort, rebuild — O(Nk log Nk). "
+    "(2) Sequential merge: merge lists one by one — O(Nk²). "
+    "(3) <b>Min-heap (priority queue):</b> always extract the smallest head — O(Nk log k). "
+    "Heap approach is optimal."
 ))
-story.append(CppCodeBlock([
-    "string minWindow(string s, string t) {",
-    "    if (t.empty()) return \"\";",
-    "    unordered_map<char,int> need, have_map;",
-    "    for (char c : t) need[c]++;",
-    "    int have = 0, required = need.size();  // distinct chars needed",
-    "    int l = 0, minLen = INT_MAX, minL = 0;",
-    "    for (int r = 0; r < s.size(); r++) {",
-    "        char c = s[r];",
-    "        have_map[c]++;",
-    "        // Check if this char's freq now satisfies 'need'",
-    "        if (need.count(c) && have_map[c] == need[c]) have++;",
-    "        // Shrink from left while window is valid",
-    "        while (have == required) {",
-    "            if (r - l + 1 < minLen) {",
-    "                minLen = r - l + 1;",
-    "                minL = l;",
+story.append(CppBlock([
+    "#include <queue>",
+    "",
+    "ListNode* mergeKLists(vector<ListNode*>& lists) {",
+    "    // Min-heap: compare by node value",
+    "    auto cmp = [](ListNode* a, ListNode* b){ return a->val > b->val; };",
+    "    priority_queue<ListNode*, vector<ListNode*>, decltype(cmp)> pq(cmp);",
+    "",
+    "    // Push head of each list into heap",
+    "    for (ListNode* l : lists)",
+    "        if (l) pq.push(l);",
+    "",
+    "    ListNode dummy(0);",
+    "    ListNode* curr = &dummy;",
+    "    while (!pq.empty()) {",
+    "        ListNode* node = pq.top(); pq.pop();",
+    "        curr->next = node;",
+    "        curr = curr->next;",
+    "        if (node->next) pq.push(node->next);  // push next of extracted",
+    "    }",
+    "    return dummy.next;",
+    "}",
+    "// Time: O(Nk * log k)  where Nk = total nodes, k = number of lists",
+    "// Space: O(k) for the heap",
+]))
+story.append(sp(0.8))
+
+story.append(h2("8.3  Sort a Linked List  (LC 148)  — Medium"))
+story.append(body(
+    "Best sort for linked lists is <b>Merge Sort</b>: O(n log n) time, O(log n) space (stack). "
+    "No random access issues. Split at middle, sort each half, merge. "
+    "Quick sort on LL is tricky (no easy random pivot). Heap sort requires O(n) extra space."
+))
+story.append(CppBlock([
+    "ListNode* sortList(ListNode* head) {",
+    "    if (!head || !head->next) return head;  // 0 or 1 node",
+    "",
+    "    // Step 1: find middle (split point)",
+    "    ListNode* slow = head, *fast = head->next;",
+    "    while (fast && fast->next) {",
+    "        slow = slow->next;",
+    "        fast = fast->next->next;",
+    "    }",
+    "    ListNode* mid = slow->next;",
+    "    slow->next = nullptr;      // cut the list in half",
+    "",
+    "    // Step 2: recursively sort both halves",
+    "    ListNode* left  = sortList(head);",
+    "    ListNode* right = sortList(mid);",
+    "",
+    "    // Step 3: merge sorted halves",
+    "    return mergeTwoLists(left, right);",
+    "}",
+    "// Time: O(n log n)   Space: O(log n) recursive stack",
+    "// Note: fast starts at head->next to get LEFT middle for even-length lists",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 9 — HASHMAP PATTERNS
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("9","Linked List + HashMap Patterns",PURPLE,TEAL))
+story.append(sp(1))
+
+story.append(h2("9.1  Copy List with Random Pointer  (LC 138)  — Medium"))
+story.append(body(
+    "Each node has a 'random' pointer pointing to any node (or null). "
+    "Deep copy the entire list. Approach: HashMap maps original nodes to their copies. "
+    "First pass: create all copies. Second pass: wire next and random pointers."
+))
+story.append(CppBlock([
+    "class Node { public: int val; Node* next; Node* random;",
+    "    Node(int v) : val(v), next(nullptr), random(nullptr) {} };",
+    "",
+    "Node* copyRandomList(Node* head) {",
+    "    if (!head) return nullptr;",
+    "    unordered_map<Node*, Node*> oldToNew;",
+    "",
+    "    // Pass 1: create all new nodes",
+    "    Node* curr = head;",
+    "    while (curr) {",
+    "        oldToNew[curr] = new Node(curr->val);",
+    "        curr = curr->next;",
+    "    }",
+    "    // Pass 2: wire next and random pointers",
+    "    curr = head;",
+    "    while (curr) {",
+    "        oldToNew[curr]->next   = oldToNew[curr->next];",
+    "        oldToNew[curr]->random = oldToNew[curr->random];",
+    "        curr = curr->next;",
+    "    }",
+    "    return oldToNew[head];",
+    "}",
+    "// Time: O(n)   Space: O(n) for the hashmap",
+    "",
+    "// O(1) space trick: interleave original and copy nodes",
+    "// 1->1'->2->2'->3->3'->NULL, then separate the two lists",
+]))
+story.append(sp(0.8))
+
+story.append(h2("9.2  LRU Cache  (LC 146)  — Medium"))
+story.append(body(
+    "Least Recently Used Cache: get/put both O(1). "
+    "<b>Data structure:</b> Doubly Linked List + HashMap. "
+    "DLL maintains access order (most recent at front, LRU at back). "
+    "HashMap gives O(1) lookup to any node. "
+    "On access/update: move node to front. On eviction: remove from back."
+))
+story.append(CppBlock([
+    "class LRUCache {",
+    "    struct DLinkedNode {",
+    "        int key, val;",
+    "        DLinkedNode* prev;",
+    "        DLinkedNode* next;",
+    "        DLinkedNode(int k=0, int v=0): key(k), val(v), prev(nullptr), next(nullptr){}",
+    "    };",
+    "    int capacity;",
+    "    unordered_map<int, DLinkedNode*> cache;   // key → node",
+    "    DLinkedNode* head;   // dummy head (most recent side)",
+    "    DLinkedNode* tail;   // dummy tail (LRU side)",
+    "",
+    "    void addToFront(DLinkedNode* node) {",
+    "        node->next = head->next;",
+    "        node->prev = head;",
+    "        head->next->prev = node;",
+    "        head->next = node;",
+    "    }",
+    "    void removeNode(DLinkedNode* node) {",
+    "        node->prev->next = node->next;",
+    "        node->next->prev = node->prev;",
+    "    }",
+    "    DLinkedNode* removeLRU() {   // remove from tail side",
+    "        DLinkedNode* lru = tail->prev;",
+    "        removeNode(lru); return lru;",
+    "    }",
+    "public:",
+    "    LRUCache(int cap) : capacity(cap) {",
+    "        head = new DLinkedNode(); tail = new DLinkedNode();",
+    "        head->next = tail; tail->prev = head;",
+    "    }",
+    "    int get(int key) {",
+    "        if (!cache.count(key)) return -1;",
+    "        DLinkedNode* node = cache[key];",
+    "        removeNode(node); addToFront(node);  // move to front",
+    "        return node->val;",
+    "    }",
+    "    void put(int key, int value) {",
+    "        if (cache.count(key)) {",
+    "            cache[key]->val = value;",
+    "            removeNode(cache[key]); addToFront(cache[key]);",
+    "        } else {",
+    "            if ((int)cache.size() == capacity) {",
+    "                DLinkedNode* lru = removeLRU();",
+    "                cache.erase(lru->key); delete lru;",
     "            }",
-    "            char lc = s[l];",
-    "            have_map[lc]--;",
-    "            if (need.count(lc) && have_map[lc] < need[lc]) have--;",
-    "            l++;",
+    "            DLinkedNode* node = new DLinkedNode(key, value);",
+    "            cache[key] = node; addToFront(node);",
     "        }",
     "    }",
-    "    return minLen == INT_MAX ? \"\" : s.substr(minL, minLen);",
-    "}",
-    "// Time: O(|s| + |t|)   Space: O(|t|)",
+    "};",
+    "// get: O(1)   put: O(1)   Space: O(capacity)",
 ]))
-story.append(sp(0.8))
-
-story.append(h2("7.4  Permutation in String  (LC 567)"))
-story.append(body(
-    "Check if any permutation of s1 exists as a substring of s2. "
-    "Equivalent to: does any fixed window of size |s1| in s2 have the same freq map as s1?"
-))
-story.append(CppCodeBlock([
-    "bool checkInclusion(string s1, string s2) {",
-    "    if (s1.size() > s2.size()) return false;",
-    "    vector<int> need(26, 0), window(26, 0);",
-    "    int k = s1.size();",
-    "    for (char c : s1) need[c - 'a']++;",
-    "    // Build first window",
-    "    for (int i = 0; i < k; i++) window[s2[i] - 'a']++;",
-    "    if (need == window) return true;",
-    "    // Slide",
-    "    for (int r = k; r < s2.size(); r++) {",
-    "        window[s2[r] - 'a']++;",
-    "        window[s2[r - k] - 'a']--;",
-    "        if (need == window) return true;",
-    "    }",
-    "    return false;",
-    "}",
-    "// Time: O(|s1| + |s2|)   Space: O(1) — fixed 26-element arrays",
-]))
-story.append(sp(0.8))
-
-story.append(h2("7.5  Longest Subarray of 1s After Deleting One Element  (LC 1493)"))
-story.append(body(
-    "At most one zero allowed in the window (the 'deleted' element). "
-    "Window invalid when it contains more than one zero — shrink left."
-))
-story.append(CppCodeBlock([
-    "int longestSubarray(vector<int>& nums) {",
-    "    int l = 0, zeros = 0, best = 0;",
-    "    for (int r = 0; r < nums.size(); r++) {",
-    "        if (nums[r] == 0) zeros++;",
-    "        while (zeros > 1) {          // window invalid",
-    "            if (nums[l] == 0) zeros--;",
-    "            l++;",
-    "        }",
-    "        // -1 because one element must be deleted",
-    "        best = max(best, r - l);    // window size - 1",
-    "    }",
-    "    return best;",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-
 story.append(PageBreak())
 
-# ════════════════════════════════════════════════════════════
-#  SECTION 8 — AT MOST K TRICK
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("8", "Sliding Window — At-Most-K Trick", GOLD, ORANGE))
+# ══════════════════════════════════════════════════════════════
+#  SECTION 10 — PALINDROME, REORDER & OTHER
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("10","Palindrome, Reorder & Other Patterns",GOLD,TEAL))
 story.append(sp(1))
 
-story.append(h2("8.1  The Core Identity"))
+story.append(h2("10.1  Palindrome Linked List  (LC 234)  — Easy"))
 story.append(body(
-    "Many problems ask for subarrays with <b>exactly K</b> of something. "
-    "Direct sliding window doesn't work for 'exactly' because we can't grow and shrink symmetrically. "
-    "<b>The trick:</b>"
+    "Check if a list is a palindrome in O(n) time and O(1) space. "
+    "Strategy: find middle, reverse second half, compare with first half, restore."
 ))
-story.append(InfoBox([
-    "count(exactly K) = count(at most K) - count(at most K-1)",
-    "",
-    "atMost(K) is easy: standard variable window. When distinct > K, shrink left.",
-    "Run atMost twice with K and K-1, subtract the results.",
-], title="🔑 ExactlyK = AtMost(K) - AtMost(K-1)", color=GOLD, bg=HexColor("#FEF9E7")))
-story.append(sp(0.8))
-
-story.append(h2("8.2  Subarrays with K Different Integers  (LC 992)"))
-story.append(CppCodeBlock([
-    "int atMost(vector<int>& nums, int k) {",
-    "    unordered_map<int,int> freq;",
-    "    int l = 0, count = 0;",
-    "    for (int r = 0; r < nums.size(); r++) {",
-    "        freq[nums[r]]++;",
-    "        while (freq.size() > k) {   // too many distinct",
-    "            freq[nums[l]]--;",
-    "            if (freq[nums[l]] == 0) freq.erase(nums[l]);",
-    "            l++;",
-    "        }",
-    "        count += r - l + 1;  // all subarrays ending at r with <=k distinct",
+story.append(CppBlock([
+    "bool isPalindrome(ListNode* head) {",
+    "    // Step 1: find middle",
+    "    ListNode* slow = head, *fast = head;",
+    "    while (fast && fast->next) {",
+    "        slow = slow->next;",
+    "        fast = fast->next->next;",
     "    }",
-    "    return count;",
-    "}",
-    "",
-    "int subarraysWithKDistinct(vector<int>& nums, int k) {",
-    "    return atMost(nums, k) - atMost(nums, k - 1);",
-    "}",
-    "// Time: O(n)   Space: O(k)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("8.3  Binary Subarrays With Sum  (LC 930)"))
-story.append(body("Exact sum S in binary array = atMost(S) - atMost(S-1)."))
-story.append(CppCodeBlock([
-    "int atMostSum(vector<int>& nums, int goal) {",
-    "    if (goal < 0) return 0;",
-    "    int l = 0, windowSum = 0, count = 0;",
-    "    for (int r = 0; r < nums.size(); r++) {",
-    "        windowSum += nums[r];",
-    "        while (windowSum > goal) windowSum -= nums[l++];",
-    "        count += r - l + 1;",
+    "    // Step 2: reverse second half",
+    "    ListNode* prev = nullptr, *curr = slow;",
+    "    while (curr) {",
+    "        ListNode* nxt = curr->next;",
+    "        curr->next = prev;",
+    "        prev = curr; curr = nxt;",
     "    }",
-    "    return count;",
-    "}",
-    "",
-    "int numSubarraysWithSum(vector<int>& nums, int goal) {",
-    "    return atMostSum(nums, goal) - atMostSum(nums, goal - 1);",
-    "}",
-    "// Time: O(n)   Space: O(1)",
-]))
-
-story.append(PageBreak())
-
-# ════════════════════════════════════════════════════════════
-#  SECTION 9 — ADVANCED PATTERNS
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("9", "Advanced Patterns", PURPLE, RED))
-story.append(sp(1))
-
-story.append(h2("9.1  Sliding Window Maximum  (LC 239)  — Monotonic Deque"))
-story.append(body(
-    "Find the maximum of every window of size k. Brute force O(nk). "
-    "<b>Monotonic deque</b> approach: maintain a deque of indices in <b>decreasing</b> order of values. "
-    "Front is always the current window maximum. O(n) time, O(k) space."
-))
-story.append(CppCodeBlock([
-    "#include <deque>",
-    "",
-    "vector<int> maxSlidingWindow(vector<int>& nums, int k) {",
-    "    deque<int> dq;     // stores INDICES, values are decreasing",
-    "    vector<int> result;",
-    "    int n = nums.size();",
-    "    for (int r = 0; r < n; r++) {",
-    "        // Remove elements outside window from front",
-    "        while (!dq.empty() && dq.front() <= r - k)",
-    "            dq.pop_front();",
-    "        // Maintain decreasing order: remove smaller elements from back",
-    "        while (!dq.empty() && nums[dq.back()] <= nums[r])",
-    "            dq.pop_back();",
-    "        dq.push_back(r);",
-    "        // Window is full — record max (front of deque)",
-    "        if (r >= k - 1)",
-    "            result.push_back(nums[dq.front()]);",
+    "    // Step 3: compare first and reversed second half",
+    "    ListNode* left = head, *right = prev;",
+    "    bool result = true;",
+    "    while (right) {   // second half may be shorter (odd length)",
+    "        if (left->val != right->val) { result = false; break; }",
+    "        left = left->next; right = right->next;",
     "    }",
     "    return result;",
     "}",
-    "// Time: O(n)   Space: O(k)",
-]))
-story.append(sp(0.5))
-story.append(InfoBox([
-    "Deque invariant: indices in deque are always in increasing order (left to right in window).",
-    "Values at those indices are in DECREASING order (front = max).",
-    "New element: pop all back elements with smaller value — they can NEVER be the max while r is in window.",
-    "Front expiry: if dq.front() <= r - k, it has left the window — pop it.",
-], title="📐 Monotonic Deque Invariant", color=PURPLE, bg=PURPLE_BG))
-story.append(sp(0.8))
-
-story.append(h2("9.2  Longest Repeating Character Replacement  (LC 424)"))
-story.append(body(
-    "You can replace at most k characters. Find the longest substring where you can make all chars the same. "
-    "<b>Key insight:</b> window is valid when (window_size - max_frequency) &lt;= k. "
-    "We only need to track the max frequency, and it only needs to increase (not decrease) for optimal answer."
-))
-story.append(CppCodeBlock([
-    "int characterReplacement(string s, int k) {",
-    "    vector<int> freq(26, 0);",
-    "    int l = 0, maxFreq = 0, best = 0;",
-    "    for (int r = 0; r < s.size(); r++) {",
-    "        freq[s[r] - 'A']++;",
-    "        maxFreq = max(maxFreq, freq[s[r] - 'A']);",
-    "        // If window invalid: (size - maxFreq) > k",
-    "        // NOTE: we only shrink by 1, never fully recompute maxFreq",
-    "        if ((r - l + 1) - maxFreq > k) {",
-    "            freq[s[l] - 'A']--;",
-    "            l++;",
-    "        }",
-    "        best = max(best, r - l + 1);",
-    "    }",
-    "    return best;",
-    "}",
-    "// Time: O(n)   Space: O(1) — 26-letter alphabet",
-]))
-story.append(sp(0.5))
-story.append(InfoBox([
-    "Why not recompute maxFreq when shrinking? The answer only improves when maxFreq increases.",
-    "Even if the actual max freq drops after shrinking, we do not need a smaller window than best.",
-    "This is a key non-obvious optimization — the window size never decreases, it only slides.",
-], title="💡 Why maxFreq Only Increases", color=PURPLE, bg=PURPLE_BG))
-story.append(sp(0.8))
-
-story.append(h2("9.3  Max Consecutive Ones III  (LC 1004)"))
-story.append(body(
-    "Flip at most k zeros to ones. Find the longest subarray of 1s. "
-    "Window invalid when zeros in window exceed k."
-))
-story.append(CppCodeBlock([
-    "int longestOnes(vector<int>& nums, int k) {",
-    "    int l = 0, zeros = 0, best = 0;",
-    "    for (int r = 0; r < nums.size(); r++) {",
-    "        if (nums[r] == 0) zeros++;",
-    "        if (zeros > k) {               // window invalid",
-    "            if (nums[l] == 0) zeros--;",
-    "            l++;",
-    "        }",
-    "        best = max(best, r - l + 1);",
-    "    }",
-    "    return best;",
-    "}",
-    "// Time: O(n)   Space: O(1)",
+    "// Time: O(n)   Space: O(1)  — best possible",
 ]))
 story.append(sp(0.8))
 
-story.append(h2("9.4  Minimum Size Subarray Sum  (LC 209)"))
+story.append(h2("10.2  Reorder List  (LC 143)  — Medium"))
 story.append(body(
-    "Find shortest subarray with sum &gt;= target. Variable window: expand until sum &gt;= target, "
-    "then shrink left to find the minimum length."
+    "Reorder: L0→L1→…→Ln to L0→Ln→L1→Ln-1→… in-place. "
+    "Three steps: (1) find middle, (2) reverse second half, (3) interleave."
 ))
-story.append(CppCodeBlock([
-    "int minSubArrayLen(int target, vector<int>& nums) {",
-    "    int l = 0, windowSum = 0, minLen = INT_MAX;",
-    "    for (int r = 0; r < nums.size(); r++) {",
-    "        windowSum += nums[r];",
-    "        while (windowSum >= target) {       // window is valid",
-    "            minLen = min(minLen, r - l + 1);",
-    "            windowSum -= nums[l];",
-    "            l++;",
-    "        }",
-    "    }",
-    "    return minLen == INT_MAX ? 0 : minLen;",
-    "}",
-    "// Time: O(n)   Space: O(1)",
+story.append(CppBlock([
+    "void reorderList(ListNode* head) {",
+    "    if (!head || !head->next) return;",
     "",
-    "// O(n log n) alternative: prefix sum + binary search",
-    "// For each r, binary search for smallest l where prefix[r]-prefix[l] >= target",
+    "    // Step 1: find middle",
+    "    ListNode* slow = head, *fast = head;",
+    "    while (fast->next && fast->next->next) {",
+    "        slow = slow->next; fast = fast->next->next;",
+    "    }",
+    "    // Step 2: reverse second half",
+    "    ListNode* prev = nullptr, *curr = slow->next;",
+    "    slow->next = nullptr;          // disconnect first half",
+    "    while (curr) {",
+    "        ListNode* nxt = curr->next; curr->next = prev;",
+    "        prev = curr; curr = nxt;",
+    "    }",
+    "    // Step 3: interleave first half and reversed second half",
+    "    ListNode* first = head, *second = prev;",
+    "    while (second) {",
+    "        ListNode* tmp1 = first->next, *tmp2 = second->next;",
+    "        first->next  = second;",
+    "        second->next = tmp1;",
+    "        first = tmp1; second = tmp2;",
+    "    }",
+    "}",
+    "// Time: O(n)   Space: O(1)",
 ]))
+story.append(sp(0.8))
 
+story.append(h2("10.3  Odd Even Linked List  (LC 328)  — Medium"))
+story.append(body(
+    "Group all odd-indexed nodes together followed by even-indexed nodes. "
+    "Use two pointers: odd and even. Link odd->odd->odd and even->even->even, then connect."
+))
+story.append(CppBlock([
+    "ListNode* oddEvenList(ListNode* head) {",
+    "    if (!head) return head;",
+    "    ListNode* odd  = head;",
+    "    ListNode* even = head->next;",
+    "    ListNode* evenHead = even;   // save even head to connect later",
+    "    while (even && even->next) {",
+    "        odd->next  = even->next;  // odd skips even",
+    "        odd        = odd->next;",
+    "        even->next = odd->next;   // even skips odd",
+    "        even       = even->next;",
+    "    }",
+    "    odd->next = evenHead;         // connect odd tail to even head",
+    "    return head;",
+    "}",
+    "// Time: O(n)   Space: O(1)",
+]))
+story.append(sp(0.8))
+
+story.append(h2("10.4  Add Two Numbers  (LC 2)  — Medium"))
+story.append(body(
+    "Numbers stored in reverse order as linked lists. Add digit by digit with carry."
+))
+story.append(CppBlock([
+    "ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {",
+    "    ListNode dummy(0);",
+    "    ListNode* curr = &dummy;",
+    "    int carry = 0;",
+    "    while (l1 || l2 || carry) {",
+    "        int sum = carry;",
+    "        if (l1) { sum += l1->val; l1 = l1->next; }",
+    "        if (l2) { sum += l2->val; l2 = l2->next; }",
+    "        carry = sum / 10;",
+    "        curr->next = new ListNode(sum % 10);",
+    "        curr = curr->next;",
+    "    }",
+    "    return dummy.next;",
+    "}",
+    "// Time: O(max(m,n))   Space: O(max(m,n)) for result list",
+]))
 story.append(PageBreak())
 
-# ════════════════════════════════════════════════════════════
-#  SECTION 10 — CHEAT SHEET
-# ════════════════════════════════════════════════════════════
-story.append(SectionBanner("10", "Complexity & Pattern Cheat Sheet", NAVY, TEAL))
+# ══════════════════════════════════════════════════════════════
+#  SECTION 11 — CHEAT SHEET
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("11","Complexity Cheat Sheet & LeetCode Map",NAVY,TEAL))
 story.append(sp(1))
 
-story.append(h2("10.1  Two Pointers — All Patterns"))
-tp_data = [
-    ["Pattern",               "Setup",                        "Key Condition",                  "Time",  "Space", "Problems"],
-    ["Opposite Ends",         "l=0, r=n-1",                   "Sorted; sum comparison",         "O(n)",  "O(1)",  "LC 1,11,15,42,167"],
-    ["Same Direction",        "slow=0, fast=0",               "fast qualifies → write to slow", "O(n)",  "O(1)",  "LC 26,27,88,283,392"],
-    ["Dutch National Flag",   "lo=0, mid=0, hi=n-1",          "3 groups; invariant zone",       "O(n)",  "O(1)",  "LC 75"],
-    ["Palindrome Check",      "l=0, r=n-1",                   "Chars must match inward",        "O(n)",  "O(1)",  "LC 125,680"],
-    ["Fast/Slow (Cycle)",     "slow=head, fast=head",         "fast moves 2x; meet = cycle",   "O(n)",  "O(1)",  "LC 141,142,287"],
-    ["3Sum / kSum",           "Fix one; two-ptr on rest",     "Skip duplicates after sort",     "O(n^2)","O(1)",  "LC 15,18,259"],
+story.append(h2("11.1  Complete Complexity Table"))
+cx_data = [
+    ["Operation",              "SLL",    "DLL",    "Circular","Notes"],
+    ["Access by index",        "O(n)",   "O(n)",   "O(n)",    "Must traverse from head"],
+    ["Insert at head",         "O(1)",   "O(1)",   "O(1)",    "Just update head pointer"],
+    ["Insert at tail",         "O(n)*",  "O(1)",   "O(1)",    "*O(1) with tail pointer"],
+    ["Insert at position i",   "O(n)",   "O(n)",   "O(n)",    "Traverse to i-1, then O(1)"],
+    ["Insert given node ptr",  "O(1)**", "O(1)",   "O(1)",    "**SLL needs predecessor"],
+    ["Delete at head",         "O(1)",   "O(1)",   "O(1)",    "Move head forward"],
+    ["Delete at tail",         "O(n)",   "O(1)",   "O(1)",    "DLL: tail->prev is new tail"],
+    ["Delete given node ptr",  "O(n)",   "O(1)",   "O(n)",    "SLL needs predecessor O(n)"],
+    ["Search",                 "O(n)",   "O(n)",   "O(n)",    "Linear scan always"],
+    ["Reverse",                "O(n)",   "O(n)",   "O(n)",    "Update all pointers"],
+    ["Find middle",            "O(n)",   "O(n)",   "O(n)",    "Fast/slow pointer trick"],
+    ["Detect cycle",           "O(n)",   "O(n)",   "—",       "Floyd's O(n) O(1) space"],
+    ["Space per node",         "O(1)+1ptr","O(1)+2ptr","O(1)+1ptr","Pointer overhead"],
 ]
-story.append(tbl(tp_data, [32*mm, 32*mm, 40*mm, 16*mm, 16*mm, 32*mm]))
-story.append(cap("Table 2: Two Pointer Patterns"))
+cx_extra=[]
+for i in range(1, len(cx_data)):
+    for j in range(1,4):
+        v = cx_data[i][j]
+        col = GREEN if v=="O(1)" else (HexColor("#1E7A4F") if "O(1)*" in v or "*" in v else (ORANGE if v=="O(n)" else DARK))
+        cx_extra += [("TEXTCOLOR",(j,i),(j,i),col),("FONTNAME",(j,i),(j,i),"Helvetica-Bold")]
+story.append(mtbl(cx_data,[40*mm,20*mm,20*mm,22*mm,66*mm],extra=cx_extra))
+story.append(cap("Table 2: Complete linked list operation complexity"))
 story.append(sp(0.5))
 
-story.append(h2("10.2  Sliding Window — All Patterns"))
-sw_data = [
-    ["Pattern",             "Window Control",                       "Data Structure",    "Time",  "Problems"],
-    ["Fixed size",          "Add arr[r], remove arr[r-k]",         "Sum / freq array",  "O(n)",  "LC 438,567,643"],
-    ["Variable (maximize)", "Expand r; shrink l while invalid",    "Map / set / count", "O(n)",  "LC 3,76,424"],
-    ["Variable (minimize)", "Expand r; shrink l while valid",      "Map / count",       "O(n)",  "LC 76,209"],
-    ["Exactly K trick",     "atMost(K) - atMost(K-1)",            "Map",               "O(n)",  "LC 930,992"],
-    ["Monotonic Deque",     "Maintain decreasing deque of indices","deque<int>",        "O(n)",  "LC 239,862"],
-    ["Two-pass",            "Left pass + right pass combine",      "Two arrays",        "O(n)",  "LC 42,135"],
-]
-story.append(tbl(sw_data, [34*mm, 55*mm, 33*mm, 16*mm, 30*mm]))
-story.append(cap("Table 3: Sliding Window Patterns"))
-story.append(sp(0.5))
-
-story.append(h2("10.3  Decision Tree — Which Pattern to Choose?"))
-story.append(CppCodeBlock([
+story.append(h2("11.2  Key Tricks & Patterns Quick Reference"))
+story.append(CppBlock([
     "/*",
-    " * Problem asks for...                 Use...",
-    " * ─────────────────────────────────────────────────────────────────",
-    " * Pair/triplet sum in SORTED array  → Two Pointers (opposite ends)",
-    " * Pair sum in UNSORTED array        → HashMap (not two pointers)",
-    " * Remove/partition elements in-place→ Two Pointers (same direction)",
-    " * 3 groups sort (0,1,2 or similar)  → Dutch National Flag",
-    " * Palindrome check                  → Two Pointers (opposite ends)",
-    " * Subsequence matching              → Two Pointers (same direction)",
-    " *",
-    " * Fixed window size k               → Sliding Window (fixed)",
-    " * Longest subarray satisfying X     → Sliding Window (variable, max)",
-    " * Shortest subarray satisfying X    → Sliding Window (variable, min)",
-    " * Exactly K distinct/sum            → atMost(K) - atMost(K-1)",
-    " * Max in every window of size k     → Monotonic Deque",
-    " * Window of chars = permutation     → Fixed window + freq array",
+    " * TRICK                         USAGE                             COMPLEXITY",
+    " * ─────────────────────────────────────────────────────────────────────────",
+    " * Dummy head node               Simplify insert/delete at head   O(1) setup",
+    " * Fast/slow pointers            Find middle, detect cycle         O(n) O(1)",
+    " * Floyd's Phase 2 reset         Find cycle entry point            O(n) O(1)",
+    " * Reverse + compare             Palindrome check                  O(n) O(1)",
+    " * Reverse half + interleave     Reorder list                      O(n) O(1)",
+    " * Three-pointer reversal        Reverse full/partial list         O(n) O(1)",
+    " * DLL + HashMap                 LRU Cache O(1) get/put            O(1) ops",
+    " * HashMap old→new               Deep copy with random pointers    O(n)",
+    " * Merge sort on LL              Sort linked list                  O(n log n)",
+    " * Min-heap                      Merge K sorted lists              O(Nk log k)",
+    " * Two redirects                 Intersection of two lists         O(m+n) O(1)",
+    " * XOR both                      XOR linked list prev+next         O(1) space",
+    " * Advance gap of n+1            Remove nth from end               O(n) O(1)",
+    " * Tail pointer                  O(1) insert at tail               O(1)",
+    " * Skip even/odd in-place        Odd-even list grouping            O(n) O(1)",
     " */",
 ]))
+story.append(sp(0.5))
+
+story.append(h2("11.3  Complete LeetCode Problem Map"))
+lc_data = [
+    ["#",   "Problem",                               "Pattern",                    "Diff"],
+    ["2",   "Add Two Numbers",                        "Digit-by-digit + carry",     "Medium"],
+    ["19",  "Remove Nth Node From End",               "Fast/slow gap of n+1",       "Medium"],
+    ["21",  "Merge Two Sorted Lists",                 "Two-pointer merge",          "Easy"],
+    ["23",  "Merge K Sorted Lists",                   "Min-heap / D&C merge",       "Hard"],
+    ["24",  "Swap Nodes in Pairs",                    "Iterative pointer juggle",   "Medium"],
+    ["25",  "Reverse Nodes in K-Group",               "Reverse + recurse",          "Hard"],
+    ["61",  "Rotate List",                            "Find new tail, reconnect",   "Medium"],
+    ["82",  "Remove Duplicates II",                   "Dummy + skip duplicates",    "Medium"],
+    ["83",  "Remove Duplicates",                      "In-place dedup scan",        "Easy"],
+    ["92",  "Reverse Linked List II",                 "Reverse sublist",            "Medium"],
+    ["138", "Copy List with Random Pointer",          "HashMap old→new nodes",      "Medium"],
+    ["141", "Linked List Cycle",                      "Floyd's detect",             "Easy"],
+    ["142", "Linked List Cycle II",                   "Floyd's Phase 1+2",          "Medium"],
+    ["143", "Reorder List",                           "Middle+Reverse+Interleave",  "Medium"],
+    ["146", "LRU Cache",                              "DLL + HashMap",              "Medium"],
+    ["148", "Sort List",                              "Merge Sort on LL",           "Medium"],
+    ["160", "Intersection of Two Linked Lists",       "Two-redirect trick",         "Easy"],
+    ["203", "Remove Linked List Elements",            "Dummy + scan",               "Easy"],
+    ["206", "Reverse Linked List",                    "Three-pointer iterative",    "Easy"],
+    ["234", "Palindrome Linked List",                 "Middle+Reverse+Compare",     "Easy"],
+    ["237", "Delete Node in a Linked List",           "Copy-next trick",            "Medium"],
+    ["328", "Odd Even Linked List",                   "Separate odd/even chains",   "Medium"],
+    ["430", "Flatten Multilevel Doubly LL",           "DFS/stack flattening",       "Medium"],
+    ["432", "All O(1) Data Structure",                "DLL + two HashMaps",         "Hard"],
+    ["876", "Middle of the Linked List",              "Fast/slow pointers",         "Easy"],
+]
+dc = {"Easy":GREEN,"Medium":ORANGE,"Hard":RED}
+le = []
+for i,r in enumerate(lc_data[1:],1):
+    col=dc.get(r[3],DARK)
+    le+=[("TEXTCOLOR",(3,i),(3,i),col),("FONTNAME",(3,i),(3,i),"Helvetica-Bold")]
+story.append(mtbl(lc_data,[13*mm,68*mm,52*mm,15*mm],extra=le))
+story.append(cap("Table 3: Complete LeetCode map — 25 problems across all linked list patterns"))
 story.append(sp(0.8))
 
-story.append(h2("10.4  Complete LeetCode Problem Map"))
-lc_data = [
-    ["#",    "Problem",                                  "Pattern",               "Difficulty"],
-    ["3",    "Longest Substring Without Repeating Chars","Sliding Window Variable","Medium"],
-    ["11",   "Container With Most Water",                "Opposite Ends",         "Medium"],
-    ["15",   "3Sum",                                     "Sort + Two Pointers",   "Medium"],
-    ["18",   "4Sum",                                     "Sort + Two Pointers",   "Medium"],
-    ["26",   "Remove Duplicates from Sorted Array",      "Same Direction",        "Easy"],
-    ["27",   "Remove Element",                           "Same Direction",        "Easy"],
-    ["42",   "Trapping Rain Water",                      "Opposite Ends",         "Hard"],
-    ["75",   "Sort Colors",                              "Dutch National Flag",   "Medium"],
-    ["76",   "Minimum Window Substring",                 "Sliding Window + Map",  "Hard"],
-    ["88",   "Merge Sorted Array",                       "Three Pointers",        "Easy"],
-    ["125",  "Valid Palindrome",                         "Opposite Ends",         "Easy"],
-    ["167",  "Two Sum II",                               "Opposite Ends",         "Medium"],
-    ["209",  "Minimum Size Subarray Sum",                "Sliding Window Min",    "Medium"],
-    ["239",  "Sliding Window Maximum",                   "Monotonic Deque",       "Hard"],
-    ["283",  "Move Zeroes",                              "Same Direction",        "Easy"],
-    ["392",  "Is Subsequence",                           "Same Direction",        "Easy"],
-    ["424",  "Longest Repeating Char Replacement",       "Sliding Window Variable","Medium"],
-    ["438",  "Find All Anagrams in a String",            "Fixed Window + Freq",   "Medium"],
-    ["567",  "Permutation in String",                    "Fixed Window + Freq",   "Medium"],
-    ["680",  "Valid Palindrome II",                      "Opposite Ends",         "Easy"],
-    ["930",  "Binary Subarrays With Sum",                "AtMost trick",          "Medium"],
-    ["992",  "Subarrays with K Different Integers",      "AtMost trick",          "Hard"],
-    ["1004", "Max Consecutive Ones III",                 "Sliding Window Variable","Medium"],
-    ["1493", "Longest Subarray of 1s After Deleting One","Sliding Window Variable","Medium"],
-]
-diff_colors = {"Easy": GREEN, "Medium": ORANGE, "Hard": RED}
-lc_style_extra = []
-for i, row in enumerate(lc_data[1:], 1):
-    col = diff_colors.get(row[3], DARK)
-    lc_style_extra.append(("TEXTCOLOR", (3, i), (3, i), col))
-    lc_style_extra.append(("FONTNAME",  (3, i), (3, i), "Helvetica-Bold"))
-story.append(tbl(lc_data, [12*mm, 65*mm, 48*mm, 23*mm], style_extra=lc_style_extra))
-story.append(cap("Table 4: Complete LeetCode problem map for Two Pointers & Sliding Window"))
-
-story.append(sp(1))
 story.append(InfoBox([
-    "1. Two Pointers on SORTED array → think opposite ends. On unsorted → think same direction or hashmap.",
-    "2. Sliding window window state = what makes it VALID. Define invalid clearly before coding.",
-    "3. For minimum subarray: shrink while VALID (greedy: take smallest valid window at each r).",
-    "4. For maximum subarray: shrink while INVALID (expand as much as possible before shrinking).",
-    "5. AtMost(K) trick: whenever 'exactly K' doesn't fit a direct window, subtract two atMost calls.",
-    "6. Monotonic deque: always ask 'can this old element ever be the answer for a future window?'",
-    "7. When window is fixed size k: sliding formula is add arr[r], remove arr[r-k] every step.",
-    "8. Two pointers is O(n); nested loop is O(n^2). Always ask: can I make one pointer never go back?",
-], title="🏆 Golden Rules — Two Pointers & Sliding Window", color=NAVY, bg=LIGHT))
+    "1.  Always use a DUMMY head node — it eliminates special cases for deleting/inserting at head.",
+    "2.  Fast/slow pointer: fast moves 2x slow. When fast=NULL, slow=middle. Master this pattern.",
+    "3.  Floyd's Cycle: Phase 1 detects. Phase 2 (reset slow to head, step both by 1) finds entry.",
+    "4.  Reverse: prev=NULL, curr=head, save next, flip link, advance. Three lines — memorize them.",
+    "5.  Never lose a pointer: always save 'next' before overwriting curr->next.",
+    "6.  DLL: O(1) delete of a known node. SLL: need predecessor → O(n). Use DLL when delete is frequent.",
+    "7.  LRU = DLL + HashMap. DLL gives order, map gives O(1) access. Together: O(1) get and put.",
+    "8.  Merge Sort is the best sort for linked lists: O(n log n) time, O(log n) space, no random access.",
+    "9.  Two-redirect intersection: when a reaches end, send to headB; when b reaches end, send to headA.",
+    "10. For deep copy with random pointers: HashMap maps old→new; two passes: create then wire.",
+],title="🏆 Golden Rules — Linked List",color=NAVY,bg=LIGHT))
 
-# ── BUILD PDF ────────────────────────────────────────────────
-out = "DSA_Notes_TwoPointers_SlidingWindow.pdf"
+# ── BUILD ──────────────────────────────────────────────────────
+out = "DSA_Notes_LinkedList.pdf"
 doc = SimpleDocTemplate(
     out, pagesize=A4,
     leftMargin=15*mm, rightMargin=15*mm,
     topMargin=34*mm, bottomMargin=18*mm,
-    title="DSA Notes — Two Pointers & Sliding Window",
+    title="DSA Notes — Linked List (All Types & Operations)",
     author="DSA Revision Planner",
-    subject="Complete Two Pointers and Sliding Window Notes with C++ Code",
+    subject="Complete Linked List Notes with C++",
 )
 doc.build(story, onFirstPage=first_page, onLaterPages=later_pages)
 print(f"Done! → {out}")
