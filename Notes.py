@@ -1,7 +1,7 @@
 """
-DSA Notes — Graphs: BFS, DFS & Union-Find
-Run:  python Graphs_BFS_DFS_UnionFind_Notes.py
-Output: DSA_Notes_Graphs_BFS_DFS_UnionFind.pdf  (same folder)
+DSA Notes — Backtracking & Trie
+Run:  python Backtracking_Trie_Notes.py
+Output: DSA_Notes_Backtracking_Trie.pdf  (same folder)
 Requires: pip install reportlab
 """
 
@@ -51,13 +51,13 @@ W, H = A4
 def _chrome(c, doc):
     c.saveState()
     c.setFillColor(NAVY);  c.rect(0, H-26*mm, W, 26*mm, fill=1, stroke=0)
-    c.setFillColor(TEAL);  c.rect(0, H-28*mm, W, 2*mm,  fill=1, stroke=0)
+    c.setFillColor(RED);   c.rect(0, H-28*mm, W, 2*mm,  fill=1, stroke=0)
     c.setFillColor(white); c.setFont("Helvetica-Bold", 11)
-    c.drawString(15*mm, H-16*mm, "DSA Notes — Graphs: BFS, DFS & Union-Find")
+    c.drawString(15*mm, H-16*mm, "DSA Notes — Backtracking & Trie")
     c.setFont("Helvetica", 9)
-    c.drawRightString(W-15*mm, H-16*mm, "Topic 8 of 13")
+    c.drawRightString(W-15*mm, H-16*mm, "Topic 11 of 13")
     c.setFillColor(NAVY);  c.rect(0, 0, W, 12*mm, fill=1, stroke=0)
-    c.setFillColor(TEAL);  c.rect(0, 12*mm, W, 1.5*mm, fill=1, stroke=0)
+    c.setFillColor(RED);   c.rect(0, 12*mm, W, 1.5*mm, fill=1, stroke=0)
     c.setFillColor(white); c.setFont("Helvetica", 8)
     c.drawString(15*mm, 4*mm, "DSA Revision Planner  •  C++ Code Edition")
     c.drawRightString(W-15*mm, 4*mm, f"Page {doc.page}")
@@ -68,59 +68,58 @@ later_pages = lambda c, doc: _chrome(c, doc)
 
 # ── Flowables ──────────────────────────────────────────────────
 class Banner(Flowable):
-    def __init__(self, num, title, color=NAVY, accent=TEAL, height=14*mm):
+    def __init__(self, num, title, color=NAVY, accent=RED, height=14*mm):
         super().__init__()
         self.num=num; self.title=title; self.color=color
         self.accent=accent; self.bh=height; self.width=W-30*mm
-    def wrap(self,*a): return self.width, self.bh+4*mm
+    def wrap(self, *a): return self.width, self.bh+4*mm
     def draw(self):
-        c=self.canv
+        c = self.canv
         c.setFillColor(self.color)
-        c.roundRect(0,2*mm,self.width,self.bh,3*mm,fill=1,stroke=0)
+        c.roundRect(0, 2*mm, self.width, self.bh, 3*mm, fill=1, stroke=0)
         c.setFillColor(self.accent)
-        c.roundRect(0,2*mm,10*mm,self.bh,3*mm,fill=1,stroke=0)
-        c.rect(7*mm,2*mm,3*mm,self.bh,fill=1,stroke=0)
-        c.setFillColor(white); c.setFont("Helvetica-Bold",11)
+        c.roundRect(0, 2*mm, 10*mm, self.bh, 3*mm, fill=1, stroke=0)
+        c.rect(7*mm, 2*mm, 3*mm, self.bh, fill=1, stroke=0)
+        c.setFillColor(white); c.setFont("Helvetica-Bold", 11)
         c.drawString(13*mm, 2*mm+self.bh/2-2*mm, self.num)
-        c.setFont("Helvetica-Bold",14)
+        c.setFont("Helvetica-Bold", 14)
         c.drawString(28*mm, 2*mm+self.bh/2-2.5*mm, self.title)
 
 
 class InfoBox(Flowable):
-    def __init__(self, lines, title="", color=TEAL, bg=TEAL_BG, width=None):
+    def __init__(self, lines, title="", color=RED, bg=RED_BG, width=None):
         super().__init__()
         self.lines = lines if isinstance(lines, list) else [lines]
-        self.title=title; self.color=color; self.bg=bg
-        self._w=width or (W-30*mm); self.pad=4*mm; self.lh=5.2*mm
-    def wrap(self,*a):
-        th=5.5*mm if self.title else 0
+        self.title = title; self.color = color; self.bg = bg
+        self._w = width or (W-30*mm); self.pad = 4*mm; self.lh = 5.2*mm
+    def wrap(self, *a):
+        th = 5.5*mm if self.title else 0
         return self._w, self.pad+th+len(self.lines)*self.lh+self.pad
     def draw(self):
-        c=self.canv
-        th=5.5*mm if self.title else 0
-        total=self.pad+th+len(self.lines)*self.lh+self.pad
-        c.setFillColor(self.bg); c.roundRect(0,0,self._w,total,2*mm,fill=1,stroke=0)
+        c = self.canv
+        th = 5.5*mm if self.title else 0
+        total = self.pad+th+len(self.lines)*self.lh+self.pad
+        c.setFillColor(self.bg); c.roundRect(0, 0, self._w, total, 2*mm, fill=1, stroke=0)
         c.setFillColor(self.color)
-        c.roundRect(0,0,3.5*mm,total,1.5*mm,fill=1,stroke=0)
-        c.rect(2*mm,0,1.5*mm,total,fill=1,stroke=0)
-        y=total-self.pad
+        c.roundRect(0, 0, 3.5*mm, total, 1.5*mm, fill=1, stroke=0)
+        c.rect(2*mm, 0, 1.5*mm, total, fill=1, stroke=0)
+        y = total-self.pad
         if self.title:
-            c.setFillColor(self.color); c.setFont("Helvetica-Bold",9.5)
-            c.drawString(7*mm,y-4.5*mm,self.title); y-=5.5*mm
-        c.setFillColor(DARK); c.setFont("Helvetica",8.8)
+            c.setFillColor(self.color); c.setFont("Helvetica-Bold", 9.5)
+            c.drawString(7*mm, y-4.5*mm, self.title); y -= 5.5*mm
+        c.setFillColor(DARK); c.setFont("Helvetica", 8.8)
         for ln in self.lines:
-            c.drawString(7*mm,y-4*mm,ln); y-=self.lh
+            c.drawString(7*mm, y-4*mm, ln); y -= self.lh
 
 
-class GraphDiagram(Flowable):
+class TrieDiagram(Flowable):
     """
-    Draws a graph given as:
-      nodes: list of (id, label, x, y)  — x,y in [0,1] relative coords
-      edges: list of (u, v, label, directed)
-      highlights: {node_id: fill_color}
+    Draw a Trie tree.
+    nodes: list of (id, label, x_frac, y_frac, is_end)
+    edges: list of (parent_id, child_id, edge_label)
     """
     def __init__(self, nodes, edges, highlights=None, label="",
-                 color=TEAL, width=None, height=55*mm):
+                 color=TEAL, width=None, height=60*mm):
         super().__init__()
         self.nodes      = nodes
         self.edges      = edges
@@ -131,174 +130,124 @@ class GraphDiagram(Flowable):
         self._h         = height
         self.r          = 6*mm
 
-    def wrap(self,*a):
+    def wrap(self, *a):
         return self._w, self._h + (5*mm if self.label else 0)
 
-    def _node_pos(self, x, y):
-        return x * (self._w - 2*self.r) + self.r, \
-               y * (self._h - 2*self.r - (5*mm if self.label else 0)) + self.r
+    def _pos(self, xf, yf):
+        pad = self.r + 2*mm
+        return (xf*(self._w-2*pad)+pad,
+                yf*(self._h-2*pad-(5*mm if self.label else 0))+pad)
 
     def draw(self):
         c = self.canv
         r = self.r
-
-        # draw edges first
-        for edge in self.edges:
-            if len(edge) == 4:
-                u, v, elabel, directed = edge
-            else:
-                u, v, elabel = edge[0], edge[1], edge[2] if len(edge)>2 else ""
-                directed = False
-            nu = next((n for n in self.nodes if n[0]==u), None)
-            nv = next((n for n in self.nodes if n[0]==v), None)
-            if nu is None or nv is None: continue
-            x1,y1 = self._node_pos(nu[2], nu[3])
-            x2,y2 = self._node_pos(nv[2], nv[3])
+        # edges first
+        for (pid, cid, elbl) in self.edges:
+            pn = next((n for n in self.nodes if n[0]==pid), None)
+            cn = next((n for n in self.nodes if n[0]==cid), None)
+            if not pn or not cn: continue
+            x1,y1 = self._pos(pn[2], pn[3])
+            x2,y2 = self._pos(cn[2], cn[3])
             dx,dy  = x2-x1, y2-y1
             dist   = math.sqrt(dx*dx+dy*dy) or 1
             ux,uy  = dx/dist, dy/dist
-            sx, sy = x1+ux*r, y1+uy*r
-            ex, ey = x2-ux*r, y2-uy*r
-            c.setStrokeColor(MUTED); c.setLineWidth(1.2)
-            c.line(sx, sy, ex, ey)
-            if directed:
-                c.setFillColor(MUTED)
-                p=c.beginPath()
-                p.moveTo(ex,ey)
-                p.lineTo(ex-ux*3*mm+uy*1.5*mm, ey-uy*3*mm-ux*1.5*mm)
-                p.lineTo(ex-ux*3*mm-uy*1.5*mm, ey-uy*3*mm+ux*1.5*mm)
-                p.close(); c.drawPath(p,fill=1,stroke=0)
-            if elabel:
-                mx,my = (sx+ex)/2, (sy+ey)/2
-                c.setFillColor(ORANGE); c.setFont("Helvetica-Bold",8)
-                ew = c.stringWidth(elabel,"Helvetica-Bold",8)
-                c.setFillColor(white)
-                c.roundRect(mx-ew/2-1*mm, my-2.5*mm, ew+2*mm, 5*mm, 1*mm, fill=1, stroke=0)
-                c.setFillColor(ORANGE)
-                c.drawString(mx-ew/2, my-2*mm, elabel)
-
-        # draw nodes
+            c.setStrokeColor(HexColor("#475569")); c.setLineWidth(1.2)
+            c.line(x1+ux*r, y1+uy*r, x2-ux*r, y2-uy*r)
+            # edge label
+            mx,my = (x1+x2)/2, (y1+y2)/2
+            c.setFillColor(RED); c.setFont("Helvetica-Bold", 8.5)
+            ew = c.stringWidth(elbl,"Helvetica-Bold",8.5)
+            c.setFillColor(HexColor("#FFF1F2"))
+            c.roundRect(mx-ew/2-1.5*mm, my-2.5*mm, ew+3*mm, 5.5*mm, 1*mm, fill=1, stroke=0)
+            c.setFillColor(RED)
+            c.drawString(mx-ew/2, my-1.5*mm, elbl)
+        # nodes
         for node in self.nodes:
-            nid, lbl, nx, ny = node
-            x,y   = self._node_pos(nx, ny)
-            fill  = self.highlights.get(nid, self.color)
-            c.setFillColor(fill); c.setStrokeColor(fill); c.setLineWidth(1.5)
-            c.circle(x,y,r,fill=1,stroke=1)
-            c.setFillColor(white); c.setFont("Helvetica-Bold",9)
-            sw = c.stringWidth(str(lbl),"Helvetica-Bold",9)
-            c.drawString(x-sw/2, y-3*mm, str(lbl))
-
+            nid, lbl, nx, ny, is_end = node
+            x,y = self._pos(nx, ny)
+            fill = self.highlights.get(nid, self.color if not is_end else GREEN)
+            c.setFillColor(fill)
+            c.setStrokeColor(fill); c.setLineWidth(1.5)
+            c.circle(x, y, r, fill=1, stroke=1)
+            if is_end:  # double circle for end nodes
+                c.setFillColor(fill); c.setStrokeColor(white); c.setLineWidth(1.5)
+                c.circle(x, y, r-1.5*mm, fill=0, stroke=1)
+            c.setFillColor(white); c.setFont("Helvetica-Bold", 9)
+            s = str(lbl); sw = c.stringWidth(s,"Helvetica-Bold",9)
+            c.drawString(x-sw/2, y-3*mm, s)
         if self.label:
-            c.setFillColor(MUTED); c.setFont("Helvetica-Oblique",8)
+            c.setFillColor(MUTED); c.setFont("Helvetica-Oblique", 8)
             lw = c.stringWidth(self.label,"Helvetica-Oblique",8)
             c.drawString(self._w/2-lw/2, 0.5*mm, self.label)
 
 
-class BFSStepsViz(Flowable):
-    """Visualise BFS queue state at each step."""
-    def __init__(self, steps, color=TEAL, width=None):
+class BacktrackTreeViz(Flowable):
+    """
+    Visualise a partial backtracking decision tree.
+    nodes: list of (id, label, depth, pos_in_level, pruned=False)
+    edges: list of (parent_id, child_id, label)
+    """
+    def __init__(self, nodes, edges, pruned_ids=None, answer_ids=None,
+                 label="", color=RED, width=None, height=55*mm):
         super().__init__()
-        self.steps = steps   # list of (visited_set, queue_list, note_str)
-        self.color = color
-        self._w    = width or (W-30*mm)
-        self.row_h = 8*mm
+        self.nodes       = nodes
+        self.edges       = edges
+        self.pruned_ids  = pruned_ids or set()
+        self.answer_ids  = answer_ids or set()
+        self.label       = label
+        self.color       = color
+        self._w          = width or (W-30*mm)
+        self._h          = height
+        self.r           = 5*mm
 
-    def wrap(self,*a):
-        return self._w, len(self.steps)*self.row_h + 10*mm
+    def wrap(self, *a):
+        return self._w, self._h + (5*mm if self.label else 0)
 
     def draw(self):
         c = self.canv
-        n = len(self.steps)
-        col_w = [12*mm, 62*mm, 62*mm, self._w-136*mm]
-        headers = ["Step","Visited","Queue","Action"]
-        # header
-        x = 0
-        c.setFillColor(NAVY)
-        c.rect(0, n*self.row_h+2*mm, self._w, 8*mm, fill=1, stroke=0)
-        c.setFillColor(white); c.setFont("Helvetica-Bold",8)
-        for i,(h,cw) in enumerate(zip(headers,col_w)):
-            c.drawString(x+2*mm, n*self.row_h+4.5*mm, h); x+=cw
-        for si,(visited,queue,note) in enumerate(self.steps):
-            y = (n-1-si)*self.row_h + 2*mm
-            fill = ALT_ROW if si%2==0 else white
-            c.setFillColor(fill); c.rect(0,y,self._w,self.row_h,fill=1,stroke=0)
-            c.setStrokeColor(BORDER); c.setLineWidth(0.3); c.rect(0,y,self._w,self.row_h,fill=0,stroke=1)
-            x=0
-            c.setFillColor(DARK); c.setFont("Helvetica-Bold",8)
-            c.drawString(x+3*mm, y+2.5*mm, str(si+1)); x+=col_w[0]
-            c.setFont("Helvetica",7.5)
-            c.setFillColor(GREEN)
-            c.drawString(x+2*mm, y+2.5*mm, "{"+", ".join(str(v) for v in sorted(visited))+"}"); x+=col_w[1]
-            c.setFillColor(TEAL)
-            c.drawString(x+2*mm, y+2.5*mm, "["+", ".join(str(v) for v in queue)+"]"); x+=col_w[2]
-            c.setFillColor(DARK)
-            c.drawString(x+2*mm, y+2.5*mm, note)
-
-
-class UnionFindViz(Flowable):
-    """Shows union-find parent array state."""
-    def __init__(self, n, parent, rank=None, label="", color=PURPLE, width=None):
-        super().__init__()
-        self.n      = n
-        self.parent = parent
-        self.rank   = rank
-        self.label  = label
-        self.color  = color
-        self._w     = width or (W-30*mm)
-        self.cell_h = 9*mm
-
-    def wrap(self,*a):
-        rows = 2 if self.rank else 1
-        return self._w, rows*self.cell_h + 14*mm
-
-    def draw(self):
-        c    = self.canv
-        n    = self.n
-        cw   = min(16*mm, (self._w-28*mm)/n)
-        sx   = (self._w - n*cw) / 2
-        base = 8*mm if self.rank else 3*mm
-
-        # header row
-        headers = [("Index", NAVY), ("Parent", self.color)]
-        if self.rank: headers.append(("Rank", ORANGE))
-
-        row_labels = ["index", "parent"]
-        if self.rank: row_labels.append("rank")
-        data_rows  = [list(range(n)), self.parent]
-        if self.rank: data_rows.append(self.rank)
-
-        for ri, (row_lbl, row_data) in enumerate(zip(row_labels, data_rows)):
-            y = base + (len(data_rows)-1-ri)*self.cell_h
-            c.setFillColor(MUTED); c.setFont("Helvetica-Bold",7.5)
-            c.drawString(2*mm, y+2.5*mm, row_lbl)
-            for i, val in enumerate(row_data):
-                x = sx + i*cw
-                # highlight root nodes (parent[i]==i)
-                is_root = (self.parent[i] == i)
-                fill = self.color if is_root else HexColor("#1E293B")
-                c.setFillColor(fill); c.setStrokeColor(self.color); c.setLineWidth(0.8)
-                c.rect(x, y, cw, self.cell_h-1*mm, fill=1, stroke=1)
-                c.setFillColor(white); c.setFont("Helvetica-Bold" if is_root else "Helvetica",8)
-                sv = str(val); sw = c.stringWidth(sv,"Helvetica",8)
-                c.drawString(x+cw/2-sw/2, y+2.5*mm, sv)
-
-        # draw tree arrows from child to parent
-        y_parent = base + (len(data_rows)-1 - row_labels.index("parent"))*self.cell_h
-        for i, p in enumerate(self.parent):
-            if p != i:
-                x1 = sx + i*cw + cw/2
-                x2 = sx + p*cw + cw/2
-                ay = y_parent + self.cell_h
-                c.setStrokeColor(self.color); c.setLineWidth(0.8)
-                c.line(x1, ay, x1, ay+3*mm)
-                c.line(x1, ay+3*mm, x2, ay+3*mm)
-                c.line(x2, ay+3*mm, x2, ay+0.5*mm)
-                pp=c.beginPath()
-                pp.moveTo(x2, ay)
-                pp.lineTo(x2-1.5*mm, ay+2*mm)
-                pp.lineTo(x2+1.5*mm, ay+2*mm)
-                pp.close(); c.setFillColor(self.color); c.drawPath(pp,fill=1,stroke=0)
-
+        r = self.r
+        # compute positions
+        max_depth = max(n[2] for n in self.nodes) if self.nodes else 0
+        max_pos   = {}
+        for n in self.nodes:
+            d = n[2]
+            max_pos[d] = max(max_pos.get(d,0), n[3])
+        pos = {}
+        for n in self.nodes:
+            nid, lbl, depth, pidx, *_ = n
+            slots = max_pos.get(depth,0)+1
+            x = (pidx+0.5)/slots * self._w
+            y = self._h - (depth/(max_depth+0.5))*(self._h-2*r) - r - (5*mm if self.label else 0)
+            pos[nid] = (x,y)
+        # edges
+        for (pid, cid, elbl) in self.edges:
+            if pid not in pos or cid not in pos: continue
+            x1,y1 = pos[pid]; x2,y2 = pos[cid]
+            dx,dy  = x2-x1, y2-y1
+            dist   = math.sqrt(dx*dx+dy*dy) or 1
+            ux,uy  = dx/dist, dy/dist
+            is_pruned = cid in self.pruned_ids
+            c.setStrokeColor(ORANGE if is_pruned else HexColor("#475569"))
+            c.setLineWidth(1.0)
+            c.line(x1+ux*r, y1+uy*r, x2-ux*r, y2-uy*r)
+            if elbl:
+                mx,my = (x1+x2)/2,(y1+y2)/2
+                c.setFillColor(MUTED); c.setFont("Helvetica",7)
+                ew = c.stringWidth(elbl,"Helvetica",7)
+                c.drawString(mx-ew/2, my-1.5*mm, elbl)
+        # nodes
+        for n in self.nodes:
+            nid, lbl, depth, pidx, *_ = n
+            if nid not in pos: continue
+            x,y = pos[nid]
+            is_pruned = nid in self.pruned_ids
+            is_answer = nid in self.answer_ids
+            fill = GREEN if is_answer else (ORANGE if is_pruned else self.color)
+            c.setFillColor(fill); c.setStrokeColor(fill); c.setLineWidth(1.2)
+            c.circle(x,y,r,fill=1,stroke=1)
+            c.setFillColor(white); c.setFont("Helvetica-Bold",7.5)
+            s = str(lbl); sw = c.stringWidth(s,"Helvetica-Bold",7.5)
+            c.drawString(x-sw/2, y-2.5*mm, s)
         if self.label:
             c.setFillColor(MUTED); c.setFont("Helvetica-Oblique",8)
             lw = c.stringWidth(self.label,"Helvetica-Oblique",8)
@@ -312,21 +261,22 @@ class CppBlock(Flowable):
         'auto','const','return','if','else','while','for','do','break','continue',
         'class','struct','public','private','true','false','nullptr','new','delete',
         'include','using','namespace','std','endl','static','inline','template',
-        'typename','unsigned','size_t','NULL','function','numeric_limits',
+        'typename','unsigned','size_t','NULL','function','iota','numeric_limits',
         'sort','max','min','swap','reverse','push_back','pop_back','emplace_back',
         'begin','end','empty','size','insert','erase','count','clear','find',
-        'front','back','top','push','pop','INT_MAX','INT_MIN','LLONG_MAX',
-        'double','float','long long','abs','greater','less',
+        'front','back','top','push','pop','fill','fill_n','greater','less',
+        'INT_MAX','INT_MIN','abs','double','float','long long','make_pair',
+        'lower_bound','upper_bound','accumulate','bitset','array',
     }
     def __init__(self, lines, width=None):
         super().__init__()
-        self.lines=lines; self._w=width or (W-30*mm)
-        self.lh=4.1*mm; self.hh=6.5*mm; self.pad=3.5*mm
-    def wrap(self,*a):
+        self.lines = lines; self._w = width or (W-30*mm)
+        self.lh = 4.1*mm; self.hh = 6.5*mm; self.pad = 3.5*mm
+    def wrap(self, *a):
         return self._w, self.hh+self.pad+len(self.lines)*self.lh+self.pad
     def draw(self):
-        c=self.canv
-        th=self.hh+self.pad+len(self.lines)*self.lh+self.pad
+        c = self.canv
+        th = self.hh+self.pad+len(self.lines)*self.lh+self.pad
         c.setFillColor(CODE_BG); c.roundRect(0,0,self._w,th,3*mm,fill=1,stroke=0)
         c.setFillColor(CODE_HDR); c.roundRect(0,th-self.hh,self._w,self.hh,3*mm,fill=1,stroke=0)
         c.rect(0,th-self.hh,self._w,self.hh/2,fill=1,stroke=0)
@@ -334,14 +284,13 @@ class CppBlock(Flowable):
         c.drawString(4*mm,th-self.hh+2*mm,"C++")
         for i,col in enumerate([HexColor("#FF5F57"),HexColor("#FEBC2E"),HexColor("#28C840")]):
             c.setFillColor(col); c.circle(self._w-(3-i)*5.5*mm,th-self.hh/2,1.4*mm,fill=1,stroke=0)
-        y=th-self.hh-self.pad-self.lh
+        y = th-self.hh-self.pad-self.lh
         for idx,raw in enumerate(self.lines):
             c.setFillColor(HexColor("#3D444D")); c.setFont("Courier",7.5)
             c.drawString(3*mm,y+1.2*mm,f"{idx+1:2d}")
-            stripped=raw.lstrip(); indent=len(raw)-len(stripped)
-            x=12*mm+indent*2.2*mm
-            self._line(c,stripped,x,y+1.2*mm)
-            y-=self.lh
+            stripped = raw.lstrip(); indent = len(raw)-len(stripped)
+            x = 12*mm+indent*2.2*mm
+            self._line(c,stripped,x,y+1.2*mm); y -= self.lh
     def _line(self,c,text,x,y):
         import re
         if '//' in text:
@@ -366,32 +315,33 @@ class CppBlock(Flowable):
             c.drawString(x,y,tok); x+=c.stringWidth(tok,"Courier",8.5)
         return x
 
-# ── Style helpers ───────────────────────────────────────────────
+# ── Style helpers ────────────────────────────────────────────────
 def S(name,**kw):
-    base=dict(fontName="Helvetica",fontSize=9.5,textColor=DARK,leading=14,spaceBefore=3,spaceAfter=3)
+    base=dict(fontName="Helvetica",fontSize=9.5,textColor=DARK,
+              leading=14,spaceBefore=3,spaceAfter=3)
     base.update(kw); return ParagraphStyle(name,**base)
 
 ST={
-    "body":    S("body",alignment=TA_JUSTIFY,leading=15),
-    "bullet":  S("bullet",leftIndent=12,firstLineIndent=-8,leading=13,spaceBefore=2,spaceAfter=2),
+    "body":    S("body",   alignment=TA_JUSTIFY,leading=15),
+    "bullet":  S("bullet", leftIndent=12,firstLineIndent=-8,leading=13,spaceBefore=2,spaceAfter=2),
     "caption": S("caption",fontName="Helvetica-Oblique",fontSize=8.5,textColor=MUTED,spaceBefore=2,spaceAfter=6),
-    "toc_h":   S("toc_h",fontName="Helvetica-Bold",fontSize=11,textColor=NAVY,spaceBefore=5,spaceAfter=2,leading=15),
-    "toc_i":   S("toc_i",fontSize=9.5,textColor=DARK,spaceBefore=1,spaceAfter=1,leftIndent=8,leading=13),
+    "toc_h":   S("toc_h", fontName="Helvetica-Bold",fontSize=11,textColor=NAVY,spaceBefore=5,spaceAfter=2,leading=15),
+    "toc_i":   S("toc_i", fontSize=9.5,textColor=DARK,spaceBefore=1,spaceAfter=1,leftIndent=8,leading=13),
     "cover_t": S("ct",fontName="Helvetica-Bold",fontSize=34,textColor=white,leading=40,alignment=TA_CENTER),
-    "cover_s": S("cs",fontName="Helvetica-Bold",fontSize=19,textColor=HexColor("#A0E4EE"),leading=26,alignment=TA_CENTER),
+    "cover_s": S("cs",fontName="Helvetica-Bold",fontSize=19,textColor=HexColor("#FFC0C0"),leading=26,alignment=TA_CENTER),
     "cover_d": S("cd",fontName="Helvetica",fontSize=11,textColor=HexColor("#CBD5E1"),leading=16,alignment=TA_CENTER),
-    "h2": S("h2",fontName="Helvetica-Bold",fontSize=14,textColor=BLUE,leading=20,spaceBefore=10,spaceAfter=4),
-    "h3": S("h3",fontName="Helvetica-Bold",fontSize=11.5,textColor=TEAL,leading=16,spaceBefore=8,spaceAfter=3),
-    "h4": S("h4",fontName="Helvetica-Bold",fontSize=10,textColor=NAVY,leading=14,spaceBefore=6,spaceAfter=2),
+    "h2": S("h2",fontName="Helvetica-Bold",fontSize=14,textColor=BLUE,  leading=20,spaceBefore=10,spaceAfter=4),
+    "h3": S("h3",fontName="Helvetica-Bold",fontSize=11.5,textColor=RED, leading=16,spaceBefore=8, spaceAfter=3),
+    "h4": S("h4",fontName="Helvetica-Bold",fontSize=10,textColor=NAVY,  leading=14,spaceBefore=6, spaceAfter=2),
 }
 
 def sp(n=1):  return Spacer(1,n*4*mm)
 def body(t):  return Paragraph(t,ST["body"])
 def cap(t):   return Paragraph(f"<i>{t}</i>",ST["caption"])
 def h2(t,col=BLUE): return Paragraph(t,ParagraphStyle("_h2",parent=ST["h2"],textColor=col))
-def h3(t,col=TEAL): return Paragraph(t,ParagraphStyle("_h3",parent=ST["h3"],textColor=col))
+def h3(t,col=RED):  return Paragraph(t,ParagraphStyle("_h3",parent=ST["h3"],textColor=col))
 def h4(t,col=NAVY): return Paragraph(t,ParagraphStyle("_h4",parent=ST["h4"],textColor=col))
-def bl(t,col="#1F7A8C"): return Paragraph(f'<font color="{col}">▸</font>  {t}',ST["bullet"])
+def bl(t,col="#C0392B"): return Paragraph(f'<font color="{col}">▸</font>  {t}',ST["bullet"])
 
 def mtbl(data,cw,extra=None):
     base=[
@@ -419,10 +369,10 @@ story=[]
 story.append(sp(4))
 cd=[
     [Paragraph("DSA Revision Notes",ST["cover_t"])],
-    [Paragraph("Topic 8 — Graphs: BFS, DFS &amp; Union-Find",ST["cover_s"])],
+    [Paragraph("Topic 11 — Backtracking &amp; Trie",ST["cover_s"])],
     [Paragraph(
-        "Graph representations · BFS/DFS templates · Connected components<br/>"
-        "Cycle detection · Topological sort · Union-Find · 25+ C++ examples",
+        "Backtracking template · Pruning · Subsets · Permutations · Combinations<br/>"
+        "N-Queens · Sudoku · Word Search II · Trie from scratch · 25+ C++ examples",
         ST["cover_d"]
     )],
 ]
@@ -438,11 +388,11 @@ story.append(ct); story.append(sp(2))
 stats=[[
     Paragraph('<b><font color="#1A3C5E">12</font></b><br/><font size="8" color="#64748B">Sections</font>',
               ParagraphStyle("s1",fontName="Helvetica-Bold",fontSize=18,textColor=NAVY,alignment=TA_CENTER,leading=22)),
-    Paragraph('<b><font color="#1A3C5E">30+</font></b><br/><font size="8" color="#64748B">C++ Examples</font>',
+    Paragraph('<b><font color="#1A3C5E">25+</font></b><br/><font size="8" color="#64748B">C++ Examples</font>',
               ParagraphStyle("s2",fontName="Helvetica-Bold",fontSize=18,textColor=NAVY,alignment=TA_CENTER,leading=22)),
-    Paragraph('<b><font color="#1A3C5E">10</font></b><br/><font size="8" color="#64748B">Diagrams</font>',
+    Paragraph('<b><font color="#1A3C5E">8</font></b><br/><font size="8" color="#64748B">Tree Diagrams</font>',
               ParagraphStyle("s3",fontName="Helvetica-Bold",fontSize=18,textColor=NAVY,alignment=TA_CENTER,leading=22)),
-    Paragraph('<b><font color="#1A3C5E">28+</font></b><br/><font size="8" color="#64748B">LeetCode Problems</font>',
+    Paragraph('<b><font color="#1A3C5E">22+</font></b><br/><font size="8" color="#64748B">LeetCode Problems</font>',
               ParagraphStyle("s4",fontName="Helvetica-Bold",fontSize=18,textColor=NAVY,alignment=TA_CENTER,leading=22)),
 ]]
 st=Table(stats,colWidths=[(W-30*mm)/4]*4)
@@ -454,45 +404,38 @@ st.setStyle(TableStyle([
 story.append(st); story.append(PageBreak())
 
 # ── TOC ────────────────────────────────────────────────────────
-story.append(Banner("TOC","Table of Contents",NAVY,TEAL))
+story.append(Banner("TOC","Table of Contents",NAVY,RED))
 story.append(sp(1))
 toc=[
-    ("1.", "Graph Fundamentals"),
-    ("",   "→ Definitions · Types · Representations · Properties"),
-    ("",   "→ Adjacency matrix · Adjacency list · Edge list comparison"),
-    ("2.", "Breadth-First Search (BFS)"),
-    ("",   "→ Algorithm · Queue-based template · Step-by-step trace"),
-    ("",   "→ Shortest path in unweighted graph · Multi-source BFS"),
-    ("",   "→ 0-1 BFS with deque"),
-    ("3.", "BFS — Classic Problems"),
-    ("",   "→ Number of Islands · Rotting Oranges · Word Ladder"),
-    ("",   "→ Shortest Path in Binary Matrix · Pacific Atlantic"),
-    ("4.", "Depth-First Search (DFS)"),
-    ("",   "→ Recursive & iterative templates"),
-    ("",   "→ DFS timestamps · Discovery/finish times"),
-    ("",   "→ DFS tree: tree/back/forward/cross edges"),
-    ("5.", "DFS — Cycle Detection"),
-    ("",   "→ Undirected graph: visited + parent check"),
-    ("",   "→ Directed graph: white-grey-black colouring"),
-    ("6.", "Topological Sort"),
-    ("",   "→ Kahn's algorithm (BFS-based)"),
-    ("",   "→ DFS-based topological sort"),
-    ("",   "→ Course Schedule I & II"),
-    ("7.", "DFS — Connected Components & SCC"),
-    ("",   "→ Connected components · Bipartite check"),
-    ("",   "→ Kosaraju's SCC algorithm"),
-    ("",   "→ Articulation points & bridges"),
-    ("8.", "Union-Find (Disjoint Set Union)"),
-    ("",   "→ Quick Find · Quick Union · Weighted Union"),
-    ("",   "→ Path compression · Union by rank"),
-    ("",   "→ Full optimised implementation"),
-    ("9.", "Union-Find — Classic Problems"),
-    ("",   "→ Redundant Connection · Number of Provinces"),
-    ("",   "→ Accounts Merge · Satisfiability of Equality Equations"),
-    ("10.","Grid Problems — BFS & DFS on 2D Arrays"),
-    ("",   "→ 4-directional template · Flood fill · Surrounded Regions"),
-    ("11.","Shortest Path Algorithms"),
-    ("",   "→ Dijkstra's · Bellman-Ford · BFS for unweighted"),
+    ("1.", "Backtracking — Core Theory"),
+    ("",   "→ Choose–Explore–Unchoose template · Decision tree"),
+    ("",   "→ Pruning strategies · Time complexity analysis"),
+    ("2.", "Subsets (Power Set)"),
+    ("",   "→ Iterative approach · Backtracking approach"),
+    ("",   "→ Subsets II (with duplicates) · Subsets of size k"),
+    ("3.", "Permutations"),
+    ("",   "→ Permutations I (distinct) · Permutations II (duplicates)"),
+    ("",   "→ Next Permutation · Permutation Sequence"),
+    ("4.", "Combinations"),
+    ("",   "→ Combinations (nCk) · Combination Sum I, II, III"),
+    ("",   "→ Letter combinations of phone number"),
+    ("5.", "Palindrome Partitioning"),
+    ("",   "→ All palindrome partitions · Min cuts (DP + BT)"),
+    ("6.", "N-Queens & N-Queens II"),
+    ("",   "→ Constraint modelling · Diagonal checks · Optimisations"),
+    ("7.", "Sudoku Solver  (LC 37)"),
+    ("",   "→ Constraint propagation · Row/col/box bitmask"),
+    ("8.", "Word Search on Grid"),
+    ("",   "→ Word Search I (DFS) · Word Search II (Trie + DFS)"),
+    ("9.", "Trie — Core Theory & Implementation"),
+    ("",   "→ Trie node structure · Insert · Search · StartsWith"),
+    ("",   "→ Time/space analysis · Compressed Trie"),
+    ("10.","Trie — Classic Problems"),
+    ("",   "→ Implement Trie · Replace Words · Map Sum Pairs"),
+    ("",   "→ Search Suggestions System · Design Add-Search Words"),
+    ("11.","Trie — Advanced Applications"),
+    ("",   "→ Maximum XOR of Two Numbers · XOR Trie"),
+    ("",   "→ Word Search II (Trie + Backtracking combined)"),
     ("12.","Complexity Cheat Sheet & LeetCode Map"),
 ]
 for num,title in toc:
@@ -503,1147 +446,1000 @@ for num,title in toc:
 story.append(PageBreak())
 
 # ══════════════════════════════════════════════════════════════
-#  SECTION 1 — GRAPH FUNDAMENTALS
+#  SECTION 1 — BACKTRACKING CORE THEORY
 # ══════════════════════════════════════════════════════════════
-story.append(Banner("1","Graph Fundamentals",NAVY,TEAL))
+story.append(Banner("1","Backtracking — Core Theory",NAVY,RED))
 story.append(sp(1))
 
-story.append(h2("1.1  Core Definitions"))
-terms=[
-    ("Vertex (Node)","A point in the graph. G = (V, E) where V = vertices, E = edges."),
-    ("Edge",         "A connection between two vertices. Can be directed or undirected."),
-    ("Degree",       "Number of edges incident to a vertex. In-degree (incoming) / out-degree (outgoing) for directed."),
-    ("Path",         "Sequence of vertices where consecutive pairs are connected by edges."),
-    ("Cycle",        "A path that starts and ends at the same vertex."),
-    ("DAG",          "Directed Acyclic Graph. Used for topological sort, dependency resolution."),
-    ("Connected",    "Undirected: path exists between every pair of vertices. Directed: strongly/weakly connected."),
-    ("Tree",         "Connected undirected graph with V-1 edges (no cycles). A special case of graph."),
-    ("Spanning Tree","A subgraph that is a tree and includes all vertices of the original graph."),
-    ("Weight",       "A value assigned to an edge representing cost, distance, or capacity."),
-    ("Bipartite",    "Graph whose vertices can be coloured with 2 colours such that no edge connects same-colour vertices."),
-]
-for term,defn in terms:
-    story.append(bl(f"<b>{term}:</b>  {defn}"))
-story.append(sp(0.5))
-
-story.append(h2("1.2  Graph Representations"))
-story.append(h3("Adjacency List — Most Common for Sparse Graphs"))
-story.append(CppBlock([
-    "#include <vector>",
-    "#include <unordered_map>",
-    "using namespace std;",
-    "",
-    "// ── Unweighted undirected graph ────────────────────────",
-    "int n = 5;  // vertices 0..4",
-    "vector<vector<int>> adj(n);",
-    "// Add edge 0--1",
-    "adj[0].push_back(1);",
-    "adj[1].push_back(0);   // undirected: add both directions",
-    "",
-    "// ── Weighted directed graph ─────────────────────────── ",
-    "vector<vector<pair<int,int>>> wadj(n);  // {neighbour, weight}",
-    "wadj[0].push_back({1, 5});   // edge 0→1 with weight 5",
-    "wadj[1].push_back({2, 3});   // edge 1→2 with weight 3",
-    "",
-    "// ── Graph with string nodes ──────────────────────────── ",
-    "unordered_map<string, vector<string>> graph;",
-    "graph[\"A\"].push_back(\"B\");",
-    "graph[\"A\"].push_back(\"C\");",
-    "",
-    "// Space: O(V + E)   Access neighbour: O(degree)   Check edge: O(degree)",
-]))
-story.append(sp(0.5))
-
-story.append(h3("Adjacency Matrix — Dense Graphs / Fast Edge Lookup"))
-story.append(CppBlock([
-    "// Adjacency matrix: O(V^2) space",
-    "int n = 5;",
-    "vector<vector<int>> mat(n, vector<int>(n, 0));",
-    "mat[0][1] = 1; mat[1][0] = 1;   // undirected edge 0--1",
-    "mat[2][3] = 7;                   // directed weighted edge 2→3 weight 7",
-    "",
-    "// Check if edge exists: O(1) — mat[u][v] != 0",
-    "// But: O(V^2) space even if graph is sparse!",
-    "// Use for: Floyd-Warshall, dense graphs, small V (V <= 1000)",
-]))
-story.append(sp(0.5))
-
-rep_data=[
-    ["Property",             "Adjacency List",          "Adjacency Matrix",      "Edge List"],
-    ["Space",                "O(V + E)",                "O(V²)",                 "O(E)"],
-    ["Add edge",             "O(1)",                    "O(1)",                  "O(1)"],
-    ["Check edge (u,v)",     "O(degree(u))",            "O(1)",                  "O(E)"],
-    ["Iterate neighbours",   "O(degree(u))",            "O(V)",                  "O(E)"],
-    ["Best for",             "Sparse graphs, BFS/DFS",  "Dense graphs, APSP",    "MST algorithms"],
-    ["Memory",               "Compact",                 "Wasteful if sparse",    "Very compact"],
-    ["Weighted edges",       "pair<int,int>",           "Store weight in cell",  "tuple<u,v,w>"],
-]
-story.append(mtbl(rep_data,[38*mm,44*mm,38*mm,38*mm]))
-story.append(cap("Table 1: Graph representation comparison"))
-story.append(PageBreak())
-
-# ══════════════════════════════════════════════════════════════
-#  SECTION 2 — BFS
-# ══════════════════════════════════════════════════════════════
-story.append(Banner("2","Breadth-First Search (BFS)",TEAL,NAVY))
-story.append(sp(1))
-
-story.append(h2("2.1  Algorithm & Intuition"))
+story.append(h2("1.1  What is Backtracking?"))
 story.append(body(
-    "BFS explores all vertices at distance d before any vertex at distance d+1. "
-    "A <b>queue (FIFO)</b> naturally achieves this level-by-level order. "
-    "Mark vertices as visited <b>before enqueuing</b> (not after dequeuing) "
-    "to prevent the same vertex being added multiple times."
+    "Backtracking is a systematic way to enumerate all possible solutions by building candidates "
+    "incrementally and <b>abandoning (backtracking)</b> a candidate as soon as it is determined "
+    "that it cannot lead to a valid solution. "
+    "It is essentially DFS on an implicit decision tree, with pruning to skip infeasible branches early. "
+    "Used for: constraint satisfaction (N-Queens, Sudoku), combinatorial generation (subsets, permutations), "
+    "and path-finding problems (Word Search)."
 ))
 story.append(sp(0.5))
-
-# Graph diagram for BFS trace
-story.append(GraphDiagram(
-    nodes=[(0,"0",0.5,0.85),(1,"1",0.15,0.55),(2,"2",0.85,0.55),
-           (3,"3",0.05,0.2),(4,"4",0.35,0.2),(5,"5",0.65,0.2),(6,"6",0.95,0.2)],
-    edges=[(0,1,""),(0,2,""),(1,3,""),(1,4,""),(2,5,""),(2,6,"")],
-    highlights={0:NAVY},
-    label="Graph: start BFS from node 0",
-    color=TEAL, height=52*mm
-))
-story.append(sp(0.3))
-
-story.append(BFSStepsViz([
-    ({0},      [1,2],    "Visit 0 → enqueue neighbours 1,2"),
-    ({0,1,2},  [3,4,5,6],"Dequeue 1 → enqueue 3,4 | Dequeue 2 → enqueue 5,6"),
-    ({0,1,2,3,4,5,6},[],  "Dequeue 3,4,5,6 → no new neighbours → done"),
-]))
-story.append(sp(0.5))
-
-story.append(h2("2.2  BFS Template — Adjacency List"))
-story.append(CppBlock([
-    "#include <queue>",
-    "#include <vector>",
-    "using namespace std;",
-    "",
-    "// ── Generic BFS Template ────────────────────────────────",
-    "void bfs(int start, vector<vector<int>>& adj) {",
-    "    int n = adj.size();",
-    "    vector<bool> visited(n, false);",
-    "    queue<int> q;",
-    "    visited[start] = true;   // mark BEFORE enqueue",
-    "    q.push(start);",
-    "    while (!q.empty()) {",
-    "        int node = q.front(); q.pop();",
-    "        // --- process node here ---",
-    "        for (int nb : adj[node]) {",
-    "            if (!visited[nb]) {",
-    "                visited[nb] = true;  // mark BEFORE enqueue",
-    "                q.push(nb);",
-    "            }",
-    "        }",
-    "    }",
-    "}",
-    "// Time: O(V + E)   Space: O(V)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("2.3  BFS Shortest Path — Unweighted Graph"))
-story.append(body(
-    "BFS gives the <b>shortest path in hops</b> for unweighted graphs. "
-    "Maintain a distance array: dist[v] = dist[u] + 1 when edge u→v is traversed in BFS."
-))
-story.append(CppBlock([
-    "vector<int> bfsShortestPath(int src, int dst, vector<vector<int>>& adj) {",
-    "    int n = adj.size();",
-    "    vector<int>  dist(n, -1);",
-    "    vector<int>  prev(n, -1);   // for path reconstruction",
-    "    queue<int> q;",
-    "    dist[src] = 0;",
-    "    q.push(src);",
-    "    while (!q.empty()) {",
-    "        int u = q.front(); q.pop();",
-    "        if (u == dst) break;   // early exit",
-    "        for (int v : adj[u]) {",
-    "            if (dist[v] == -1) {",
-    "                dist[v] = dist[u] + 1;",
-    "                prev[v] = u;",
-    "                q.push(v);",
-    "            }",
-    "        }",
-    "    }",
-    "    if (dist[dst] == -1) return {};   // unreachable",
-    "    // Reconstruct path",
-    "    vector<int> path;",
-    "    for (int v = dst; v != -1; v = prev[v]) path.push_back(v);",
-    "    reverse(path.begin(), path.end());",
-    "    return path;",
-    "}",
-    "// Time: O(V+E)   Space: O(V)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("2.4  Multi-Source BFS"))
-story.append(body(
-    "When multiple starting points exist (e.g., multiple 0s in a grid), "
-    "push all sources into the queue initially with distance 0. "
-    "BFS naturally propagates the shortest distance from any source."
-))
-story.append(CppBlock([
-    "// Multi-source BFS — e.g., Rotting Oranges (LC 994)",
-    "void multiSourceBFS(vector<vector<int>>& grid) {",
-    "    int m = grid.size(), n = grid[0].size();",
-    "    queue<pair<int,int>> q;",
-    "    // Enqueue ALL sources first",
-    "    for (int r = 0; r < m; r++)",
-    "        for (int c = 0; c < n; c++)",
-    "            if (grid[r][c] == 2)   // source condition",
-    "                q.push({r, c});",
-    "    int dr[] = {-1,1,0,0};",
-    "    int dc[] = {0,0,-1,1};",
-    "    while (!q.empty()) {",
-    "        auto [r, c] = q.front(); q.pop();",
-    "        for (int d = 0; d < 4; d++) {",
-    "            int nr = r+dr[d], nc = c+dc[d];",
-    "            if (nr>=0 && nr<m && nc>=0 && nc<n && grid[nr][nc]==1) {",
-    "                grid[nr][nc] = 2;   // mark visited/updated",
-    "                q.push({nr, nc});",
-    "            }",
-    "        }",
-    "    }",
-    "}",
-    "// Time: O(m*n)   Space: O(m*n)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("2.5  0-1 BFS — Deque for Edge Weights 0 or 1"))
-story.append(body(
-    "When edge weights are only 0 or 1, use a <b>deque</b> instead of a queue or full Dijkstra. "
-    "Weight-0 edges: push to <b>front</b>. Weight-1 edges: push to <b>back</b>. "
-    "This gives O(V+E) vs O((V+E) log V) for Dijkstra."
-))
-story.append(CppBlock([
-    "#include <deque>",
-    "",
-    "vector<int> zeroOneBFS(int src, vector<vector<pair<int,int>>>& adj) {",
-    "    int n = adj.size();",
-    "    vector<int> dist(n, INT_MAX);",
-    "    deque<int> dq;",
-    "    dist[src] = 0;",
-    "    dq.push_back(src);",
-    "    while (!dq.empty()) {",
-    "        int u = dq.front(); dq.pop_front();",
-    "        for (auto [v, w] : adj[u]) {",
-    "            if (dist[u] + w < dist[v]) {",
-    "                dist[v] = dist[u] + w;",
-    "                if (w == 0) dq.push_front(v);   // 0-weight: front",
-    "                else        dq.push_back(v);     // 1-weight: back",
-    "            }",
-    "        }",
-    "    }",
-    "    return dist;",
-    "}",
-    "// Time: O(V + E)   Space: O(V)",
-    "// Use case: LC 1368 Minimum Cost to Make at Least One Valid Path in Grid",
-]))
-story.append(PageBreak())
-
-# ══════════════════════════════════════════════════════════════
-#  SECTION 3 — BFS CLASSIC PROBLEMS
-# ══════════════════════════════════════════════════════════════
-story.append(Banner("3","BFS — Classic Problems",TEAL,NAVY))
-story.append(sp(1))
-
-story.append(h2("3.1  Number of Islands  (LC 200)  — Medium"))
-story.append(body(
-    "Count connected components of '1's in a 2D grid. "
-    "For each unvisited '1', BFS/DFS and mark all connected '1's as visited. "
-    "Each BFS/DFS call = one island."
-))
-story.append(CppBlock([
-    "int numIslands(vector<vector<char>>& grid) {",
-    "    int m = grid.size(), n = grid[0].size(), islands = 0;",
-    "    int dr[]={-1,1,0,0}, dc[]={0,0,-1,1};",
-    "    for (int r = 0; r < m; r++) {",
-    "        for (int c = 0; c < n; c++) {",
-    "            if (grid[r][c] == '1') {",
-    "                islands++;",
-    "                // BFS to mark all connected land",
-    "                queue<pair<int,int>> q;",
-    "                grid[r][c] = '0';   // mark visited immediately",
-    "                q.push({r,c});",
-    "                while (!q.empty()) {",
-    "                    auto [cr,cc] = q.front(); q.pop();",
-    "                    for (int d=0;d<4;d++) {",
-    "                        int nr=cr+dr[d], nc=cc+dc[d];",
-    "                        if (nr>=0&&nr<m&&nc>=0&&nc<n&&grid[nr][nc]=='1'){",
-    "                            grid[nr][nc]='0';",
-    "                            q.push({nr,nc});",
-    "                        }",
-    "                    }",
-    "                }",
-    "            }",
-    "        }",
-    "    }",
-    "    return islands;",
-    "}",
-    "// Time: O(m*n)   Space: O(min(m,n)) — max queue size is diagonal",
-]))
-story.append(sp(0.8))
-
-story.append(h2("3.2  Word Ladder  (LC 127)  — Hard"))
-story.append(body(
-    "Find minimum transformations from beginWord to endWord changing one letter at a time, "
-    "using only words in wordList. Model as graph: nodes = words, edges = one-letter-apart words. "
-    "BFS gives shortest path. Key trick: generate all 26-letter variations at each step."
-))
-story.append(CppBlock([
-    "#include <unordered_set>",
-    "",
-    "int ladderLength(string begin, string end, vector<string>& wordList) {",
-    "    unordered_set<string> wordSet(wordList.begin(), wordList.end());",
-    "    if (!wordSet.count(end)) return 0;",
-    "    queue<string> q;",
-    "    q.push(begin);",
-    "    int steps = 1;",
-    "    while (!q.empty()) {",
-    "        int sz = q.size();",
-    "        for (int i = 0; i < sz; i++) {",
-    "            string word = q.front(); q.pop();",
-    "            if (word == end) return steps;",
-    "            // Try all single-letter changes",
-    "            for (int j = 0; j < (int)word.size(); j++) {",
-    "                char orig = word[j];",
-    "                for (char c = 'a'; c <= 'z'; c++) {",
-    "                    word[j] = c;",
-    "                    if (wordSet.count(word)) {",
-    "                        q.push(word);",
-    "                        wordSet.erase(word);  // remove = mark visited",
-    "                    }",
-    "                }",
-    "                word[j] = orig;",
-    "            }",
-    "        }",
-    "        steps++;",
-    "    }",
-    "    return 0;",
-    "}",
-    "// Time: O(M^2 * N)  M=word length, N=wordList size   Space: O(M*N)",
-]))
-story.append(PageBreak())
-
-# ══════════════════════════════════════════════════════════════
-#  SECTION 4 — DFS
-# ══════════════════════════════════════════════════════════════
-story.append(Banner("4","Depth-First Search (DFS)",PURPLE,TEAL))
-story.append(sp(1))
-
-story.append(h2("4.1  DFS — Recursive & Iterative Templates"))
-story.append(body(
-    "DFS explores as far as possible along each branch before backtracking. "
-    "Natural with recursion (implicit call stack). "
-    "Iterative version uses an explicit stack. "
-    "DFS assigns <b>discovery time</b> and <b>finish time</b> to each vertex — useful for cycle detection and SCC."
-))
-story.append(CppBlock([
-    "// ── Recursive DFS ───────────────────────────────────────",
-    "void dfsRec(int u, vector<vector<int>>& adj, vector<bool>& vis) {",
-    "    vis[u] = true;",
-    "    // --- pre-process u here ---",
-    "    for (int v : adj[u]) {",
-    "        if (!vis[v]) dfsRec(v, adj, vis);",
-    "    }",
-    "    // --- post-process u here (after all descendants) ---",
-    "}",
-    "",
-    "// Call for all components:",
-    "void dfsAll(vector<vector<int>>& adj) {",
-    "    int n = adj.size();",
-    "    vector<bool> vis(n, false);",
-    "    for (int i = 0; i < n; i++)",
-    "        if (!vis[i]) dfsRec(i, adj, vis);",
-    "}",
-    "// Time: O(V+E)   Space: O(V) stack + O(V) visited",
-]))
-story.append(sp(0.5))
-story.append(CppBlock([
-    "// ── Iterative DFS (using explicit stack) ───────────────",
-    "void dfsIter(int start, vector<vector<int>>& adj) {",
-    "    int n = adj.size();",
-    "    vector<bool> vis(n, false);",
-    "    stack<int> st;",
-    "    st.push(start);",
-    "    while (!st.empty()) {",
-    "        int u = st.top(); st.pop();",
-    "        if (vis[u]) continue;   // skip if already visited",
-    "        vis[u] = true;",
-    "        // --- process u ---",
-    "        for (int v : adj[u]) {",
-    "            if (!vis[v]) st.push(v);",
-    "        }",
-    "    }",
-    "}",
-    "// NOTE: iterative DFS may visit neighbours in reverse order vs recursive",
-    "// For exact same order: push neighbours in reverse",
-]))
-story.append(sp(0.8))
-
-story.append(h2("4.2  DFS Timestamps — Discovery & Finish Times"))
-story.append(body(
-    "Assign each vertex a <b>discovery time</b> (when first visited) and <b>finish time</b> "
-    "(when all descendants processed). These timestamps classify edges and enable "
-    "cycle detection, SCC, and topological sort."
-))
-story.append(CppBlock([
-    "int timer = 0;",
-    "vector<int> disc, finish;",
-    "",
-    "void dfsTimestamp(int u, vector<vector<int>>& adj, vector<bool>& vis) {",
-    "    vis[u] = true;",
-    "    disc[u] = ++timer;        // record discovery time",
-    "    for (int v : adj[u]) {",
-    "        if (!vis[v]) dfsTimestamp(v, adj, vis);",
-    "    }",
-    "    finish[u] = ++timer;      // record finish time",
-    "}",
-    "",
-    "// Edge classification in directed graph:",
-    "// Tree edge:    disc[u] < disc[v] < finish[v] < finish[u]  (v unvisited when traversed)",
-    "// Back edge:    disc[v] < disc[u] < finish[u] < finish[v]  (v is ancestor → CYCLE)",
-    "// Forward edge: disc[u] < disc[v], finish[v] < finish[u]   (v is descendant)",
-    "// Cross edge:   finish[v] < disc[u]                        (no ancestor relation)",
-]))
-story.append(PageBreak())
-
-# ══════════════════════════════════════════════════════════════
-#  SECTION 5 — CYCLE DETECTION
-# ══════════════════════════════════════════════════════════════
-story.append(Banner("5","DFS — Cycle Detection",RED,TEAL))
-story.append(sp(1))
-
-story.append(h2("5.1  Undirected Graph — Visited + Parent Check"))
-story.append(body(
-    "In an undirected graph, a cycle exists if DFS encounters a visited neighbour that is NOT the parent "
-    "we came from. Pass the parent vertex to avoid treating the edge we just came from as a back-edge."
-))
-story.append(CppBlock([
-    "bool hasCycleUndirected(int u, int parent,",
-    "                         vector<vector<int>>& adj, vector<bool>& vis) {",
-    "    vis[u] = true;",
-    "    for (int v : adj[u]) {",
-    "        if (!vis[v]) {",
-    "            if (hasCycleUndirected(v, u, adj, vis)) return true;",
-    "        } else if (v != parent) {",
-    "            return true;   // visited neighbour that's not parent → cycle",
-    "        }",
-    "    }",
-    "    return false;",
-    "}",
-    "",
-    "bool containsCycle(vector<vector<int>>& adj) {",
-    "    int n = adj.size();",
-    "    vector<bool> vis(n, false);",
-    "    for (int i = 0; i < n; i++)",
-    "        if (!vis[i] && hasCycleUndirected(i, -1, adj, vis)) return true;",
-    "    return false;",
-    "}",
-    "// Time: O(V+E)   Space: O(V)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("5.2  Directed Graph — White/Grey/Black Colouring"))
-story.append(body(
-    "For directed graphs, we need 3 colours: <b>white</b> (unvisited), "
-    "<b>grey</b> (in current DFS path / recursion stack), <b>black</b> (fully processed). "
-    "A back-edge — encountering a grey node — indicates a cycle."
-))
 story.append(InfoBox([
-    "0 = WHITE: not yet visited",
-    "1 = GREY:  currently in the recursion stack (processing)",
-    "2 = BLACK: fully processed (all descendants done)",
-    "Cycle condition: DFS reaches a neighbour v where color[v] == GREY",
-    "Why not just 'visited'? A visited-but-finished (BLACK) node in a directed graph",
-    "does NOT create a cycle — the current path doesn't go through it.",
-],title="🎨 3-Color DFS for Directed Graphs",color=RED,bg=RED_BG))
-story.append(sp(0.5))
-story.append(CppBlock([
-    "// color: 0=white, 1=grey (in stack), 2=black (done)",
-    "bool hasCycleDirected(int u, vector<vector<int>>& adj, vector<int>& color) {",
-    "    color[u] = 1;   // grey: start processing",
-    "    for (int v : adj[u]) {",
-    "        if (color[v] == 1) return true;   // back-edge to grey = cycle",
-    "        if (color[v] == 0) {",
-    "            if (hasCycleDirected(v, adj, color)) return true;",
-    "        }",
-    "    }",
-    "    color[u] = 2;   // black: finished",
-    "    return false;",
-    "}",
+    "CHOOSE:   Make a choice from available options at the current decision point.",
+    "EXPLORE:  Recurse deeper with that choice (move to next decision point).",
+    "UNCHOOSE: Undo the choice (restore state) and try the next option.",
     "",
-    "bool containsCycleDirected(vector<vector<int>>& adj) {",
-    "    int n = adj.size();",
-    "    vector<int> color(n, 0);",
-    "    for (int i = 0; i < n; i++)",
-    "        if (color[i] == 0 && hasCycleDirected(i, adj, color)) return true;",
-    "    return false;",
+    "Pruning: before EXPLORE, check if the current partial solution CAN lead to a valid answer.",
+    "If not → skip this branch entirely. Good pruning is the difference between fast and TLE.",
+], title="🔑 Choose–Explore–Unchoose Template", color=RED, bg=RED_BG))
+story.append(sp(0.5))
+
+story.append(h2("1.2  Universal Backtracking Template"))
+story.append(CppBlock([
+    "// ── Universal Backtracking Template ────────────────────",
+    "void backtrack(int pos, vector<int>& current,",
+    "               vector<vector<int>>& result,",
+    "               /* problem-specific params */ ) {",
+    "    // Base case: valid complete solution",
+    "    if (isComplete(pos, current)) {",
+    "        result.push_back(current);",
+    "        return;",
+    "    }",
+    "    // Iterate all choices at this decision point",
+    "    for (auto choice : getChoices(pos)) {",
+    "        if (!isValid(choice, current)) continue;  // PRUNE",
+    "        // ── CHOOSE ──",
+    "        current.push_back(choice);",
+    "        markUsed(choice);",
+    "        // ── EXPLORE ──",
+    "        backtrack(pos + 1, current, result);",
+    "        // ── UNCHOOSE ──",
+    "        current.pop_back();",
+    "        unmarkUsed(choice);",
+    "    }",
     "}",
-    "// Time: O(V+E)   Space: O(V)",
+    "// Time: O(b^d) worst case — b=branching factor, d=depth",
+    "// Good pruning makes practical time much better",
+]))
+story.append(sp(0.5))
+
+story.append(h2("1.3  Decision Tree Visualisation"))
+story.append(BacktrackTreeViz(
+    nodes=[
+        (0, "[]",   0, 2, False),
+        (1, "[1]",  1, 0, False), (2, "[2]",  1, 1, False), (3, "[3]",  1, 2, False), (4, "[4]",  1, 3, False),
+        (5, "[1,2]",2, 0, False), (6, "[1,3]",2, 1, False), (7, "[1,4]",2, 2, False),
+        (8, "[2,3]",2, 3, False), (9, "[2,4]",2, 4, False),
+        (10,"[3,4]",2, 5, False),
+    ],
+    edges=[
+        (0,1,"1"),(0,2,"2"),(0,3,"3"),(0,4,"4"),
+        (1,5,"2"),(1,6,"3"),(1,7,"4"),
+        (2,8,"3"),(2,9,"4"),
+        (3,10,"4"),
+    ],
+    answer_ids={5,6,7,8,9,10},
+    pruned_ids={4},
+    label="Combinations C(4,2): green=answer, orange=pruned (no more choices after 4)",
+    color=RED, height=52*mm
+))
+story.append(cap("Decision tree for combinations of size 2 from [1,2,3,4]. Each level = one element added."))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 2 — SUBSETS
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("2","Subsets (Power Set)",RED,NAVY))
+story.append(sp(1))
+
+story.append(h2("2.1  Subsets I — All Subsets of Distinct Elements  (LC 78)"))
+story.append(body(
+    "Generate all 2^n subsets of a set of distinct integers. "
+    "Backtracking: at each index, either include or exclude the element. "
+    "Alternative: iterate index <b>start</b> to avoid duplicates — each element appears at most once per subset."
+))
+story.append(CppBlock([
+    "// LC 78 — Subsets",
+    "vector<vector<int>> subsets(vector<int>& nums) {",
+    "    vector<vector<int>> result;",
+    "    vector<int> current;",
+    "    function<void(int)> bt = [&](int start) {",
+    "        result.push_back(current);         // every state is a valid subset",
+    "        for (int i = start; i < (int)nums.size(); i++) {",
+    "            current.push_back(nums[i]);    // CHOOSE",
+    "            bt(i + 1);                     // EXPLORE (i+1: no reuse)",
+    "            current.pop_back();            // UNCHOOSE",
+    "        }",
+    "    };",
+    "    bt(0);",
+    "    return result;",
+    "}",
+    "// Time: O(n * 2^n)   Space: O(n) recursion depth",
+    "",
+    "// Iterative bit-mask approach",
+    "vector<vector<int>> subsetsBit(vector<int>& nums) {",
+    "    int n = nums.size();",
+    "    vector<vector<int>> result;",
+    "    for (int mask = 0; mask < (1<<n); mask++) {",
+    "        vector<int> sub;",
+    "        for (int i = 0; i < n; i++)",
+    "            if (mask & (1<<i)) sub.push_back(nums[i]);",
+    "        result.push_back(sub);",
+    "    }",
+    "    return result;  // Time: O(n * 2^n)   Space: O(1) extra",
+    "}",
+]))
+story.append(sp(0.8))
+
+story.append(h2("2.2  Subsets II — With Duplicates  (LC 90)"))
+story.append(body(
+    "When the input has duplicates, sort first, then skip duplicates at the same recursion level. "
+    "Key: skip if <code>i > start && nums[i] == nums[i-1]</code> — this means the same value "
+    "was already chosen at this level, so we'd generate a duplicate subset."
+))
+story.append(CppBlock([
+    "// LC 90 — Subsets II (with duplicates)",
+    "vector<vector<int>> subsetsWithDup(vector<int>& nums) {",
+    "    sort(nums.begin(), nums.end());          // MUST sort first",
+    "    vector<vector<int>> result;",
+    "    vector<int> current;",
+    "    function<void(int)> bt = [&](int start) {",
+    "        result.push_back(current);",
+    "        for (int i = start; i < (int)nums.size(); i++) {",
+    "            // Skip duplicate values at the SAME level",
+    "            if (i > start && nums[i] == nums[i-1]) continue;",
+    "            current.push_back(nums[i]);",
+    "            bt(i + 1);",
+    "            current.pop_back();",
+    "        }",
+    "    };",
+    "    bt(0);",
+    "    return result;",
+    "}",
+    "// The condition i > start (NOT i > 0) is crucial:",
+    "// It only skips duplicates at the SAME recursive level",
+    "// i > 0 would incorrectly skip valid elements in deeper levels",
 ]))
 story.append(PageBreak())
 
 # ══════════════════════════════════════════════════════════════
-#  SECTION 6 — TOPOLOGICAL SORT
+#  SECTION 3 — PERMUTATIONS
 # ══════════════════════════════════════════════════════════════
-story.append(Banner("6","Topological Sort",ORANGE,TEAL))
+story.append(Banner("3","Permutations",RED,NAVY))
 story.append(sp(1))
 
-story.append(h2("6.1  What is Topological Sort?"))
+story.append(h2("3.1  Permutations I — Distinct Elements  (LC 46)"))
 story.append(body(
-    "A <b>linear ordering</b> of vertices of a DAG such that for every directed edge u→v, "
-    "vertex u appears before vertex v. Only possible for DAGs (no cycles). "
-    "Used for: task scheduling, build systems, dependency resolution, course prerequisites."
-))
-story.append(sp(0.5))
-
-story.append(h2("6.2  Kahn's Algorithm — BFS-based  (LC 207/210)"))
-story.append(body(
-    "Repeatedly remove vertices with in-degree 0 (no dependencies). "
-    "After removing a vertex, decrement in-degree of its neighbours. "
-    "If topological order contains all V vertices, graph is a DAG. Otherwise, cycle exists."
+    "Generate all n! permutations of distinct integers. "
+    "Use a <b>used[]</b> boolean array to track which elements are in the current permutation. "
+    "At each position, try all unused elements."
 ))
 story.append(CppBlock([
-    "// Kahn's Algorithm — O(V+E)",
-    "vector<int> topoSort(int n, vector<vector<int>>& adj) {",
-    "    vector<int> indegree(n, 0);",
-    "    // Compute in-degree for all vertices",
-    "    for (int u = 0; u < n; u++)",
-    "        for (int v : adj[u]) indegree[v]++;",
-    "    // Enqueue all vertices with in-degree 0",
-    "    queue<int> q;",
-    "    for (int i = 0; i < n; i++)",
-    "        if (indegree[i] == 0) q.push(i);",
-    "    vector<int> order;",
-    "    while (!q.empty()) {",
-    "        int u = q.front(); q.pop();",
-    "        order.push_back(u);",
-    "        for (int v : adj[u]) {",
-    "            indegree[v]--;",
-    "            if (indegree[v] == 0) q.push(v);",
+    "// LC 46 — Permutations",
+    "vector<vector<int>> permute(vector<int>& nums) {",
+    "    int n = nums.size();",
+    "    vector<vector<int>> result;",
+    "    vector<int> current;",
+    "    vector<bool> used(n, false);",
+    "    function<void()> bt = [&]() {",
+    "        if ((int)current.size() == n) {",
+    "            result.push_back(current); return;",
     "        }",
-    "    }",
-    "    // If order.size() != n → cycle exists",
-    "    return order;",
+    "        for (int i = 0; i < n; i++) {",
+    "            if (used[i]) continue;",
+    "            used[i] = true;            // CHOOSE",
+    "            current.push_back(nums[i]);",
+    "            bt();                      // EXPLORE",
+    "            current.pop_back();        // UNCHOOSE",
+    "            used[i] = false;",
+    "        }",
+    "    };",
+    "    bt();",
+    "    return result;",
     "}",
-    "// Time: O(V+E)   Space: O(V)",
+    "// Time: O(n * n!)   Space: O(n)",
+    "",
+    "// Alternative: swap-based (no used[] array)",
+    "void btSwap(vector<int>& nums, int start, vector<vector<int>>& res) {",
+    "    if (start == (int)nums.size()) { res.push_back(nums); return; }",
+    "    for (int i = start; i < (int)nums.size(); i++) {",
+    "        swap(nums[start], nums[i]);",
+    "        btSwap(nums, start+1, res);",
+    "        swap(nums[start], nums[i]); // UNCHOOSE: restore",
+    "    }",
+    "}",
 ]))
 story.append(sp(0.8))
 
-story.append(h2("6.3  DFS-based Topological Sort"))
+story.append(h2("3.2  Permutations II — With Duplicates  (LC 47)"))
 story.append(body(
-    "In DFS: when a vertex finishes (all descendants processed), push to a stack. "
-    "At the end, pop the stack — this gives topological order. "
-    "Why? A vertex pushed first (finishes first) must come AFTER all its dependencies."
+    "Sort first. Skip a duplicate element if its previous identical element has NOT been used "
+    "(meaning it was already chosen at this level and we'd generate the same permutation). "
+    "Condition: <code>!used[i-1] && nums[i] == nums[i-1]</code>."
 ))
 story.append(CppBlock([
-    "void dfsTopoSort(int u, vector<vector<int>>& adj,",
-    "                  vector<bool>& vis, stack<int>& st) {",
-    "    vis[u] = true;",
-    "    for (int v : adj[u])",
-    "        if (!vis[v]) dfsTopoSort(v, adj, vis, st);",
-    "    st.push(u);   // push AFTER all descendants are processed",
+    "// LC 47 — Permutations II (with duplicates)",
+    "vector<vector<int>> permuteUnique(vector<int>& nums) {",
+    "    sort(nums.begin(), nums.end());",
+    "    int n = nums.size();",
+    "    vector<vector<int>> result;",
+    "    vector<int> current;",
+    "    vector<bool> used(n, false);",
+    "    function<void()> bt = [&]() {",
+    "        if ((int)current.size() == n) { result.push_back(current); return; }",
+    "        for (int i = 0; i < n; i++) {",
+    "            if (used[i]) continue;",
+    "            // Skip: same value as previous AND previous was NOT used",
+    "            // (means we already explored this choice at this level)",
+    "            if (i > 0 && nums[i] == nums[i-1] && !used[i-1]) continue;",
+    "            used[i] = true; current.push_back(nums[i]);",
+    "            bt();",
+    "            current.pop_back(); used[i] = false;",
+    "        }",
+    "    };",
+    "    bt();",
+    "    return result;",
     "}",
-    "",
-    "vector<int> topoSortDFS(int n, vector<vector<int>>& adj) {",
-    "    vector<bool> vis(n, false);",
-    "    stack<int> st;",
-    "    for (int i = 0; i < n; i++)",
-    "        if (!vis[i]) dfsTopoSort(i, adj, vis, st);",
-    "    vector<int> order;",
-    "    while (!st.empty()) { order.push_back(st.top()); st.pop(); }",
-    "    return order;",
-    "}",
-    "// Time: O(V+E)   Space: O(V)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("6.4  Course Schedule I & II  (LC 207, 210)"))
-story.append(CppBlock([
-    "// LC 207 — Can finish all courses? (cycle detection in directed graph)",
-    "bool canFinish(int numCourses, vector<vector<int>>& prereqs) {",
-    "    vector<vector<int>> adj(numCourses);",
-    "    for (auto& e : prereqs) adj[e[1]].push_back(e[0]);",
-    "    // Use Kahn's: if topo order has all courses → no cycle",
-    "    vector<int> indeg(numCourses,0);",
-    "    for (int u=0;u<numCourses;u++) for (int v:adj[u]) indeg[v]++;",
-    "    queue<int> q;",
-    "    for (int i=0;i<numCourses;i++) if(indeg[i]==0) q.push(i);",
-    "    int count=0;",
-    "    while(!q.empty()){",
-    "        int u=q.front();q.pop();count++;",
-    "        for(int v:adj[u]) if(--indeg[v]==0) q.push(v);",
-    "    }",
-    "    return count==numCourses;",
-    "}",
-    "",
-    "// LC 210 — Return one valid order (or empty if impossible)",
-    "vector<int> findOrder(int n, vector<vector<int>>& prereqs) {",
-    "    vector<vector<int>> adj(n);",
-    "    vector<int> indeg(n,0);",
-    "    for (auto& e : prereqs) { adj[e[1]].push_back(e[0]); indeg[e[0]]++; }",
-    "    queue<int> q;",
-    "    for(int i=0;i<n;i++) if(indeg[i]==0) q.push(i);",
-    "    vector<int> order;",
-    "    while(!q.empty()){",
-    "        int u=q.front();q.pop(); order.push_back(u);",
-    "        for(int v:adj[u]) if(--indeg[v]==0) q.push(v);",
-    "    }",
-    "    return order.size()==n ? order : vector<int>{};",
-    "}",
+    "// The !used[i-1] condition ensures we only use the first occurrence",
+    "// of each duplicate value at each recursive level",
 ]))
 story.append(PageBreak())
 
 # ══════════════════════════════════════════════════════════════
-#  SECTION 7 — CONNECTED COMPONENTS & SCC
+#  SECTION 4 — COMBINATIONS
 # ══════════════════════════════════════════════════════════════
-story.append(Banner("7","Connected Components, Bipartite & SCC",BLUE,TEAL))
+story.append(Banner("4","Combinations",ORANGE,RED))
 story.append(sp(1))
 
-story.append(h2("7.1  Connected Components  (LC 323)"))
+story.append(h2("4.1  Combination Sum I — Unlimited Reuse  (LC 39)"))
+story.append(body(
+    "Find all combinations of candidates that sum to target. Each number can be used unlimited times. "
+    "Pass the same index <code>i</code> (not i+1) to allow reuse. Prune if remaining target &lt; 0."
+))
 story.append(CppBlock([
-    "// Count connected components in undirected graph",
-    "int countComponents(int n, vector<vector<int>>& edges) {",
-    "    vector<vector<int>> adj(n);",
-    "    for (auto& e : edges) {",
-    "        adj[e[0]].push_back(e[1]);",
-    "        adj[e[1]].push_back(e[0]);",
-    "    }",
-    "    vector<bool> vis(n, false);",
-    "    int components = 0;",
-    "    for (int i = 0; i < n; i++) {",
-    "        if (!vis[i]) {",
-    "            components++;",
-    "            // BFS/DFS marks entire component",
-    "            queue<int> q; vis[i]=true; q.push(i);",
-    "            while(!q.empty()){",
-    "                int u=q.front();q.pop();",
-    "                for(int v:adj[u]) if(!vis[v]){vis[v]=true;q.push(v);}",
+    "// LC 39 — Combination Sum (unlimited reuse, distinct candidates)",
+    "vector<vector<int>> combinationSum(vector<int>& cands, int target) {",
+    "    sort(cands.begin(), cands.end());        // sort for pruning",
+    "    vector<vector<int>> result;",
+    "    vector<int> current;",
+    "    function<void(int,int)> bt = [&](int start, int rem) {",
+    "        if (rem == 0) { result.push_back(current); return; }",
+    "        for (int i = start; i < (int)cands.size(); i++) {",
+    "            if (cands[i] > rem) break;       // PRUNE: sorted, all larger won't work",
+    "            current.push_back(cands[i]);",
+    "            bt(i, rem - cands[i]);           // i (not i+1): allow reuse",
+    "            current.pop_back();",
+    "        }",
+    "    };",
+    "    bt(0, target);",
+    "    return result;",
+    "}",
+    "// Time: O(n^(T/M)) where T=target, M=min candidate  Space: O(T/M)",
+]))
+story.append(sp(0.8))
+
+story.append(h2("4.2  Combination Sum II — Each Number Used Once  (LC 40)"))
+story.append(body(
+    "Each number used at most once. Has duplicates. Sort + skip same value at same level. "
+    "Pass i+1 (not i) to prevent reuse."
+))
+story.append(CppBlock([
+    "// LC 40 — Combination Sum II (each used once, duplicates in input)",
+    "vector<vector<int>> combinationSum2(vector<int>& cands, int target) {",
+    "    sort(cands.begin(), cands.end());",
+    "    vector<vector<int>> result;",
+    "    vector<int> current;",
+    "    function<void(int,int)> bt = [&](int start, int rem) {",
+    "        if (rem == 0) { result.push_back(current); return; }",
+    "        for (int i = start; i < (int)cands.size(); i++) {",
+    "            if (cands[i] > rem) break;",
+    "            // Skip duplicates at same level",
+    "            if (i > start && cands[i] == cands[i-1]) continue;",
+    "            current.push_back(cands[i]);",
+    "            bt(i + 1, rem - cands[i]);       // i+1: no reuse",
+    "            current.pop_back();",
+    "        }",
+    "    };",
+    "    bt(0, target);",
+    "    return result;",
+    "}",
+]))
+story.append(sp(0.8))
+
+story.append(h2("4.3  Letter Combinations of Phone Number  (LC 17)"))
+story.append(CppBlock([
+    "// LC 17 — Letter Combinations of a Phone Number",
+    "vector<string> letterCombinations(string digits) {",
+    "    if (digits.empty()) return {};",
+    "    vector<string> phone = {\"\",\"\",\"abc\",\"def\",\"ghi\",\"jkl\",",
+    "                             \"mno\",\"pqrs\",\"tuv\",\"wxyz\"};",
+    "    vector<string> result;",
+    "    string current = \"\";",
+    "    function<void(int)> bt = [&](int pos) {",
+    "        if (pos == (int)digits.size()) { result.push_back(current); return; }",
+    "        for (char ch : phone[digits[pos]-'0']) {",
+    "            current += ch;                   // CHOOSE",
+    "            bt(pos + 1);                     // EXPLORE",
+    "            current.pop_back();              // UNCHOOSE",
+    "        }",
+    "    };",
+    "    bt(0);",
+    "    return result;",
+    "}",
+    "// Time: O(4^n * n)  n=digits length (max 4 letters per digit)",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 5 — PALINDROME PARTITIONING
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("5","Palindrome Partitioning",PURPLE,RED))
+story.append(sp(1))
+
+story.append(h2("5.1  All Palindrome Partitions  (LC 131)  — Medium"))
+story.append(body(
+    "Partition string s into substrings where every substring is a palindrome. "
+    "Precompute isPalin[i][j] to check palindromes in O(1) during backtracking. "
+    "At each position, try all valid palindrome endings."
+))
+story.append(CppBlock([
+    "// LC 131 — Palindrome Partitioning",
+    "vector<vector<string>> partition(string s) {",
+    "    int n = s.size();",
+    "    // Precompute palindrome table — O(n^2)",
+    "    vector<vector<bool>> isPalin(n, vector<bool>(n,false));",
+    "    for (int i=n-1; i>=0; i--)",
+    "        for (int j=i; j<n; j++)",
+    "            isPalin[i][j]=(s[i]==s[j])&&(j-i<=2||isPalin[i+1][j-1]);",
+    "    vector<vector<string>> result;",
+    "    vector<string> current;",
+    "    function<void(int)> bt = [&](int start) {",
+    "        if (start == n) { result.push_back(current); return; }",
+    "        for (int end = start; end < n; end++) {",
+    "            if (isPalin[start][end]) {         // PRUNE: only palindromes",
+    "                current.push_back(s.substr(start, end-start+1));",
+    "                bt(end + 1);",
+    "                current.pop_back();",
     "            }",
     "        }",
-    "    }",
-    "    return components;",
+    "    };",
+    "    bt(0);",
+    "    return result;",
     "}",
-    "// Time: O(V+E)   Space: O(V)",
+    "// Time: O(n * 2^n)   Space: O(n^2) for palindrome table",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 6 — N-QUEENS
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("6","N-Queens & N-Queens II  (LC 51, 52)",RED,NAVY))
+story.append(sp(1))
+
+story.append(h2("6.1  N-Queens — Place n queens on n×n board with no attacks"))
+story.append(body(
+    "Place one queen per row. Track which columns, main diagonals (row-col), "
+    "and anti-diagonals (row+col) are occupied. "
+    "<b>Key insight:</b> for the main diagonal, row-col is constant; for anti-diagonal, row+col is constant. "
+    "Use bitmasks or sets for O(1) conflict checking."
+))
+story.append(CppBlock([
+    "// LC 51 — N-Queens: return all valid board configurations",
+    "vector<vector<string>> solveNQueens(int n) {",
+    "    vector<vector<string>> result;",
+    "    vector<int> queens(n, -1);      // queens[row] = col",
+    "    set<int> cols, diag1, diag2;   // diag1=row-col, diag2=row+col",
+    "    function<void(int)> bt = [&](int row) {",
+    "        if (row == n) {",
+    "            // Build board from queens[]",
+    "            vector<string> board(n, string(n,'.'));",
+    "            for (int r=0;r<n;r++) board[r][queens[r]]='Q';",
+    "            result.push_back(board);",
+    "            return;",
+    "        }",
+    "        for (int col = 0; col < n; col++) {",
+    "            if (cols.count(col)||diag1.count(row-col)||diag2.count(row+col))",
+    "                continue;                    // PRUNE: under attack",
+    "            queens[row] = col;",
+    "            cols.insert(col); diag1.insert(row-col); diag2.insert(row+col);",
+    "            bt(row + 1);",
+    "            cols.erase(col); diag1.erase(row-col); diag2.erase(row+col);",
+    "        }",
+    "    };",
+    "    bt(0);",
+    "    return result;",
+    "}",
+    "// Time: O(n!)   Space: O(n)",
 ]))
 story.append(sp(0.8))
 
-story.append(h2("7.2  Bipartite Check  (LC 785)  — Medium"))
+story.append(h2("6.2  N-Queens — Bitmask Optimisation  (LC 52)"))
 story.append(body(
-    "A graph is bipartite iff it can be 2-coloured with no two adjacent vertices sharing a colour. "
-    "Equivalently: it contains no odd-length cycle. Use BFS/DFS colouring."
+    "Use integer bitmasks instead of sets for O(1) bitwise column/diagonal checks. "
+    "Available positions = ~(cols | diag1 | diag2) & fullMask."
 ))
 story.append(CppBlock([
-    "bool isBipartite(vector<vector<int>>& graph) {",
-    "    int n = graph.size();",
-    "    vector<int> color(n, -1);   // -1=unvisited, 0/1=colours",
-    "    for (int start = 0; start < n; start++) {",
-    "        if (color[start] != -1) continue;",
-    "        queue<int> q;",
-    "        color[start] = 0;",
-    "        q.push(start);",
-    "        while (!q.empty()) {",
-    "            int u = q.front(); q.pop();",
-    "            for (int v : graph[u]) {",
-    "                if (color[v] == -1) {",
-    "                    color[v] = 1 - color[u];  // opposite colour",
-    "                    q.push(v);",
-    "                } else if (color[v] == color[u]) {",
-    "                    return false;   // same colour → not bipartite",
+    "// LC 52 — N-Queens II: count solutions only (bitmask approach)",
+    "int totalNQueens(int n) {",
+    "    int count = 0;",
+    "    int full = (1<<n)-1;        // all n bits set = all columns available",
+    "    function<void(int,int,int)> bt = [&](int cols, int d1, int d2) {",
+    "        if (cols == full) { count++; return; }",
+    "        // Available positions: columns not attacked",
+    "        int avail = ~(cols|d1|d2) & full;",
+    "        while (avail) {",
+    "            int pos = avail & (-avail);   // lowest set bit = rightmost available col",
+    "            avail &= avail-1;             // clear that bit",
+    "            bt(cols|pos, (d1|pos)<<1, (d2|pos)>>1);",
+    "            //  new cols  new main diag  new anti diag",
+    "        }",
+    "    };",
+    "    bt(0, 0, 0);",
+    "    return count;",
+    "}",
+    "// Time: O(n!)   Space: O(n) — much faster in practice than set-based",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 7 — SUDOKU SOLVER
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("7","Sudoku Solver  (LC 37)  — Hard",RED,NAVY))
+story.append(sp(1))
+
+story.append(h2("7.1  Constraint Modelling"))
+story.append(body(
+    "Maintain bitmasks for each row (9 bits), each column (9 bits), and each 3x3 box (9 bits). "
+    "Bit i is set if digit i+1 is already placed. "
+    "Available digits for cell (r,c) = ~(rowMask[r] | colMask[c] | boxMask[r/3*3+c/3]) & 0x1FF."
+))
+story.append(CppBlock([
+    "// LC 37 — Sudoku Solver",
+    "void solveSudoku(vector<vector<char>>& board) {",
+    "    int rowM[9]={}, colM[9]={}, boxM[9]={};",
+    "    vector<pair<int,int>> empty;",
+    "    // Initialise masks from existing digits",
+    "    for (int r=0;r<9;r++) for (int c=0;c<9;c++) {",
+    "        if (board[r][c]=='.') { empty.push_back({r,c}); continue; }",
+    "        int bit = 1<<(board[r][c]-'1');",
+    "        rowM[r]|=bit; colM[c]|=bit; boxM[r/3*3+c/3]|=bit;",
+    "    }",
+    "    function<bool(int)> bt = [&](int idx) -> bool {",
+    "        if (idx==(int)empty.size()) return true;",
+    "        auto [r,c] = empty[idx];",
+    "        int avail = ~(rowM[r]|colM[c]|boxM[r/3*3+c/3]) & 0x1FF;",
+    "        while (avail) {",
+    "            int bit = avail & (-avail);    // lowest available digit bit",
+    "            avail &= avail-1;",
+    "            int d = __builtin_ctz(bit);    // digit index (0-based)",
+    "            board[r][c] = '1'+d;",
+    "            rowM[r]|=bit; colM[c]|=bit; boxM[r/3*3+c/3]|=bit;",
+    "            if (bt(idx+1)) return true;    // solved!",
+    "            rowM[r]^=bit; colM[c]^=bit; boxM[r/3*3+c/3]^=bit;",
+    "            board[r][c]='.';",
+    "        }",
+    "        return false;",
+    "    };",
+    "    bt(0);",
+    "}",
+    "// Time: O(9^empty_cells) worst case   Space: O(1) extra",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 8 — WORD SEARCH
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("8","Word Search on Grid",ORANGE,RED))
+story.append(sp(1))
+
+story.append(h2("8.1  Word Search I  (LC 79)  — Medium"))
+story.append(body(
+    "Search for a word in a 2D grid — can move in 4 directions, no reuse. "
+    "DFS from each cell. Mark cell visited during recursion, restore after."
+))
+story.append(CppBlock([
+    "// LC 79 — Word Search",
+    "bool exist(vector<vector<char>>& board, string word) {",
+    "    int m=board.size(), n=board[0].size();",
+    "    int dr[]={-1,1,0,0}, dc[]={0,0,-1,1};",
+    "    function<bool(int,int,int)> dfs = [&](int r, int c, int k) -> bool {",
+    "        if (k == (int)word.size()) return true;   // all chars matched",
+    "        if (r<0||r>=m||c<0||c>=n||board[r][c]!=word[k]) return false;",
+    "        char orig = board[r][c];",
+    "        board[r][c] = '#';                         // mark visited",
+    "        for (int d=0;d<4;d++)",
+    "            if (dfs(r+dr[d], c+dc[d], k+1)) { board[r][c]=orig; return true; }",
+    "        board[r][c] = orig;                        // restore",
+    "        return false;",
+    "    };",
+    "    for (int r=0;r<m;r++) for (int c=0;c<n;c++)",
+    "        if (dfs(r,c,0)) return true;",
+    "    return false;",
+    "}",
+    "// Time: O(m*n * 4^L) L=word length   Space: O(L) recursion",
+]))
+story.append(sp(0.8))
+
+story.append(h2("8.2  Word Search II — Multiple Words via Trie  (LC 212)  — Hard"))
+story.append(body(
+    "Find all words from a dictionary that exist in the board. "
+    "Naive approach: run Word Search I for each word → O(words * m*n * 4^L). "
+    "Trie approach: build Trie of all words, then DFS using Trie to guide search. "
+    "Remove found words from Trie to avoid duplicates and prune exhausted branches."
+))
+story.append(CppBlock([
+    "struct TrieNode {",
+    "    TrieNode* ch[26]={};",
+    "    string word = \"\";   // non-empty means a word ends here",
+    "};",
+    "vector<string> findWords(vector<vector<char>>& board,",
+    "                          vector<string>& words) {",
+    "    TrieNode* root = new TrieNode();",
+    "    // Build trie from word list",
+    "    for (auto& w : words) {",
+    "        TrieNode* cur=root;",
+    "        for (char c:w) { if(!cur->ch[c-'a']) cur->ch[c-'a']=new TrieNode();",
+    "                         cur=cur->ch[c-'a']; }",
+    "        cur->word=w;",
+    "    }",
+    "    int m=board.size(), n=board[0].size();",
+    "    vector<string> result;",
+    "    int dr[]={-1,1,0,0}, dc[]={0,0,-1,1};",
+    "    function<void(int,int,TrieNode*)> dfs=[&](int r,int c,TrieNode* node){",
+    "        if(r<0||r>=m||c<0||c>=n||board[r][c]=='#') return;",
+    "        char ch=board[r][c];",
+    "        TrieNode* next=node->ch[ch-'a'];",
+    "        if(!next) return;                    // PRUNE: no word with this prefix",
+    "        if(next->word!=\"\") {               // found a word",
+    "            result.push_back(next->word);",
+    "            next->word=\"\";                 // remove to avoid duplicates",
+    "        }",
+    "        board[r][c]='#';                     // mark visited",
+    "        for(int d=0;d<4;d++) dfs(r+dr[d],c+dc[d],next);",
+    "        board[r][c]=ch;                      // restore",
+    "    };",
+    "    for(int r=0;r<m;r++) for(int c=0;c<n;c++) dfs(r,c,root);",
+    "    return result;",
+    "}",
+    "// Time: O(m*n*4^L + W*L)  W=#words, L=avg length   Space: O(W*L)",
+]))
+story.append(PageBreak())
+
+# ══════════════════════════════════════════════════════════════
+#  SECTION 9 — TRIE CORE
+# ══════════════════════════════════════════════════════════════
+story.append(Banner("9","Trie — Core Theory & Implementation",TEAL,RED))
+story.append(sp(1))
+
+story.append(h2("9.1  What is a Trie?"))
+story.append(body(
+    "A <b>Trie</b> (prefix tree or digital tree) is a tree where each node represents "
+    "a character, and paths from root to marked nodes spell out words. "
+    "All strings sharing a common prefix share the same path in the Trie. "
+    "This enables O(L) insert, search, and prefix queries — where L is the string length — "
+    "independent of the number of stored strings."
+))
+story.append(sp(0.5))
+
+# Trie diagram for {app, apple, apply, apt}
+story.append(TrieDiagram(
+    nodes=[
+        (0, "root",0.5, 0.88, False),
+        (1, "a",   0.5, 0.65, False),
+        (2, "p",   0.5, 0.42, False),
+        (3, "p",   0.2, 0.20, False),
+        (4, "t",   0.8, 0.20, False),
+        (5, "l",   0.1, 0.04, False),
+        (6, "e",   0.25,0.04, True),
+        (7, "y",   0.4, 0.04, True),
+        (8, "p",   0.8, 0.04, True),
+    ],
+    edges=[
+        (0,1,"a"),(1,2,"p"),(2,3,"p"),(2,4,"t"),
+        (3,5,"l"),(3,6,"le"),(3,7,"ly"),(4,8,"t"),
+    ],
+    highlights={0:NAVY},
+    label="Trie for {apple, apply, apt}: double-circle = end of word, shared prefix 'ap'",
+    color=TEAL, height=62*mm
+))
+story.append(sp(0.5))
+
+story.append(h2("9.2  Full Trie Implementation  (LC 208)"))
+story.append(CppBlock([
+    "// LC 208 — Implement Trie (Prefix Tree)",
+    "class Trie {",
+    "    struct TrieNode {",
+    "        TrieNode* children[26];",
+    "        bool isEnd;",
+    "        TrieNode() : isEnd(false) {",
+    "            fill(children, children+26, nullptr);",
+    "        }",
+    "    };",
+    "    TrieNode* root;",
+    "public:",
+    "    Trie() { root = new TrieNode(); }",
+    "",
+    "    void insert(const string& word) {",
+    "        TrieNode* cur = root;",
+    "        for (char c : word) {",
+    "            int idx = c - 'a';",
+    "            if (!cur->children[idx])",
+    "                cur->children[idx] = new TrieNode();",
+    "            cur = cur->children[idx];",
+    "        }",
+    "        cur->isEnd = true;",
+    "    }   // Time: O(L)   Space: O(L * 26) per word",
+    "",
+    "    bool search(const string& word) {",
+    "        TrieNode* cur = root;",
+    "        for (char c : word) {",
+    "            int idx = c - 'a';",
+    "            if (!cur->children[idx]) return false;",
+    "            cur = cur->children[idx];",
+    "        }",
+    "        return cur->isEnd;",
+    "    }   // Time: O(L)",
+    "",
+    "    bool startsWith(const string& prefix) {",
+    "        TrieNode* cur = root;",
+    "        for (char c : prefix) {",
+    "            if (!cur->children[c-'a']) return false;",
+    "            cur = cur->children[c-'a'];",
+    "        }",
+    "        return true;",
+    "    }   // Time: O(L)",
+    "",
+    "    // Delete a word from the trie",
+    "    bool remove(const string& word) {",
+    "        function<bool(TrieNode*, int)> del = [&](TrieNode* n, int i) -> bool {",
+    "            if (i == (int)word.size()) {",
+    "                if (!n->isEnd) return false;",
+    "                n->isEnd = false;",
+    "                // Can delete node if it has no children",
+    "                for (auto c : n->children) if (c) return false;",
+    "                return true;",
+    "            }",
+    "            int idx = word[i]-'a';",
+    "            if (!n->children[idx]) return false;",
+    "            if (del(n->children[idx], i+1)) {",
+    "                delete n->children[idx];",
+    "                n->children[idx] = nullptr;",
+    "                // Can delete this node too if no other children",
+    "                if (!n->isEnd) {",
+    "                    for (auto c : n->children) if (c) return false;",
+    "                    return true;",
     "                }",
     "            }",
-    "        }",
+    "            return false;",
+    "        };",
+    "        return del(root, 0);",
     "    }",
-    "    return true;",
-    "}",
-    "// Time: O(V+E)   Space: O(V)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("7.3  Kosaraju's Algorithm — Strongly Connected Components"))
-story.append(body(
-    "An SCC is a maximal subgraph where every vertex is reachable from every other. "
-    "Kosaraju's: (1) DFS on original graph, record finish order. "
-    "(2) Transpose the graph. (3) DFS in reverse finish order on transposed graph — each DFS = one SCC."
-))
-story.append(CppBlock([
-    "void dfs1(int u, vector<vector<int>>& adj,",
-    "          vector<bool>& vis, stack<int>& st) {",
-    "    vis[u] = true;",
-    "    for (int v : adj[u]) if (!vis[v]) dfs1(v, adj, vis, st);",
-    "    st.push(u);   // push after all descendants",
-    "}",
-    "void dfs2(int u, vector<vector<int>>& radj, vector<bool>& vis) {",
-    "    vis[u] = true;",
-    "    for (int v : radj[u]) if (!vis[v]) dfs2(v, radj, vis);",
-    "}",
-    "int kosaraju(int n, vector<vector<int>>& adj) {",
-    "    // Step 1: DFS on original graph",
-    "    vector<bool> vis(n, false); stack<int> st;",
-    "    for (int i=0;i<n;i++) if(!vis[i]) dfs1(i,adj,vis,st);",
-    "    // Step 2: Transpose graph",
-    "    vector<vector<int>> radj(n);",
-    "    for (int u=0;u<n;u++) for(int v:adj[u]) radj[v].push_back(u);",
-    "    // Step 3: DFS on transposed in reverse finish order",
-    "    fill(vis.begin(),vis.end(),false);",
-    "    int scc=0;",
-    "    while(!st.empty()){",
-    "        int u=st.top();st.pop();",
-    "        if(!vis[u]){scc++;dfs2(u,radj,vis);}",
-    "    }",
-    "    return scc;",
-    "}",
-    "// Time: O(V+E)   Space: O(V+E)",
+    "};",
+    "// Space: O(ALPHABET_SIZE * L * W)  W=number of words",
 ]))
 story.append(PageBreak())
 
 # ══════════════════════════════════════════════════════════════
-#  SECTION 8 — UNION-FIND
+#  SECTION 10 — TRIE CLASSIC PROBLEMS
 # ══════════════════════════════════════════════════════════════
-story.append(Banner("8","Union-Find (Disjoint Set Union — DSU)",PURPLE,TEAL))
+story.append(Banner("10","Trie — Classic Problems",TEAL,RED))
 story.append(sp(1))
 
-story.append(h2("8.1  Core Idea & Evolution"))
+story.append(h2("10.1  Design Add and Search Words  (LC 211)  — Medium"))
 story.append(body(
-    "Union-Find maintains a collection of <b>disjoint sets</b>. "
-    "Two operations: <b>find(x)</b> — which set does x belong to? "
-    "<b>union(x,y)</b> — merge the sets containing x and y. "
-    "Optimisations: <b>path compression</b> (flatten tree on find) and "
-    "<b>union by rank</b> (always attach smaller tree under larger). "
-    "Together they give <b>nearly O(1) amortised</b> per operation — O(α(n)) where α is the inverse Ackermann function."
+    "Support wildcard '.' which matches any character. "
+    "Normal characters traverse the Trie deterministically. "
+    "For '.', try all 26 children recursively."
 ))
-story.append(sp(0.5))
-
-# Show union-find state
-story.append(h3("State after union(0,1), union(2,3), union(1,2)"))
-story.append(UnionFindViz(
-    n=6, parent=[0,0,0,2,4,5], rank=[2,0,1,0,0,0],
-    label="After merging: {0,1,2,3} in one component, {4} and {5} separate. Root of {0,1,2,3} = 0",
-    color=PURPLE
-))
-story.append(sp(0.5))
-
-story.append(h2("8.2  Full Optimised Implementation"))
 story.append(CppBlock([
-    "class UnionFind {",
-    "    vector<int> parent, rank_;",
+    "class WordDictionary {",
+    "    struct Node { Node* ch[26]={}; bool end=false; };",
+    "    Node* root;",
     "public:",
-    "    UnionFind(int n) : parent(n), rank_(n, 0) {",
-    "        iota(parent.begin(), parent.end(), 0);  // parent[i] = i",
-    "    }",
-    "    // Find with PATH COMPRESSION — O(α(n)) amortised",
-    "    int find(int x) {",
-    "        if (parent[x] != x)",
-    "            parent[x] = find(parent[x]);  // path compression: flatten",
-    "        return parent[x];",
-    "    }",
-    "    // Union by RANK — attach smaller tree under larger",
-    "    bool unite(int x, int y) {",
-    "        int rx = find(x), ry = find(y);",
-    "        if (rx == ry) return false;   // already same set",
-    "        if (rank_[rx] < rank_[ry]) swap(rx, ry);",
-    "        parent[ry] = rx;              // attach ry under rx",
-    "        if (rank_[rx] == rank_[ry]) rank_[rx]++;",
-    "        return true;",
-    "    }",
-    "    bool connected(int x, int y) { return find(x) == find(y); }",
-    "};",
-    "// find: O(α(n)) ≈ O(1) amortised   unite: O(α(n))",
-    "// α(n) < 5 for all practical n — effectively constant",
-]))
-story.append(sp(0.8))
-
-story.append(h2("8.3  Union-Find with Size Tracking"))
-story.append(CppBlock([
-    "class UnionFindSz {",
-    "    vector<int> parent, sz;",
-    "    int components;",
-    "public:",
-    "    UnionFindSz(int n) : parent(n), sz(n,1), components(n) {",
-    "        iota(parent.begin(), parent.end(), 0);",
-    "    }",
-    "    int find(int x) {",
-    "        return parent[x]==x ? x : parent[x]=find(parent[x]);",
-    "    }",
-    "    bool unite(int x, int y) {",
-    "        x=find(x); y=find(y);",
-    "        if(x==y) return false;",
-    "        if(sz[x]<sz[y]) swap(x,y);",
-    "        parent[y]=x; sz[x]+=sz[y];  // attach smaller under larger",
-    "        components--;",
-    "        return true;",
-    "    }",
-    "    int size(int x)   { return sz[find(x)]; }",
-    "    int numComponents() { return components; }",
-    "    bool connected(int x,int y){ return find(x)==find(y); }",
-    "};",
-]))
-story.append(PageBreak())
-
-# ══════════════════════════════════════════════════════════════
-#  SECTION 9 — UNION-FIND PROBLEMS
-# ══════════════════════════════════════════════════════════════
-story.append(Banner("9","Union-Find — Classic Problems",PURPLE,TEAL))
-story.append(sp(1))
-
-story.append(h2("9.1  Redundant Connection  (LC 684)  — Medium"))
-story.append(body(
-    "Find the edge that, when removed, makes an undirected tree. "
-    "Process edges in order: if both endpoints are already in the same component, "
-    "this edge creates a cycle — it's the answer."
-))
-story.append(CppBlock([
-    "vector<int> findRedundantConnection(vector<vector<int>>& edges) {",
-    "    int n = edges.size();",
-    "    UnionFind uf(n + 1);   // 1-indexed",
-    "    for (auto& e : edges) {",
-    "        if (!uf.unite(e[0], e[1]))",
-    "            return e;   // already connected → this edge is redundant",
-    "    }",
-    "    return {};",
-    "}",
-    "// Time: O(n * α(n)) ≈ O(n)   Space: O(n)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("9.2  Number of Provinces  (LC 547)  — Medium"))
-story.append(CppBlock([
-    "int findCircleNum(vector<vector<int>>& isConnected) {",
-    "    int n = isConnected.size();",
-    "    UnionFindSz uf(n);",
-    "    for (int i = 0; i < n; i++)",
-    "        for (int j = i+1; j < n; j++)",
-    "            if (isConnected[i][j]) uf.unite(i, j);",
-    "    return uf.numComponents();",
-    "}",
-    "// Time: O(n^2 * α(n))   Space: O(n)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("9.3  Accounts Merge  (LC 721)  — Medium"))
-story.append(body(
-    "Merge accounts sharing at least one email. "
-    "Union-Find: map each email to its first-seen account index. "
-    "If email already seen, union the two accounts. "
-    "Finally, group all emails by their root account."
-))
-story.append(CppBlock([
-    "vector<vector<string>> accountsMerge(vector<vector<string>>& accounts) {",
-    "    int n = accounts.size();",
-    "    UnionFind uf(n);",
-    "    unordered_map<string, int> emailToAcc;",
-    "    // Union accounts that share emails",
-    "    for (int i = 0; i < n; i++) {",
-    "        for (int j = 1; j < (int)accounts[i].size(); j++) {",
-    "            string& email = accounts[i][j];",
-    "            if (emailToAcc.count(email))",
-    "                uf.unite(i, emailToAcc[email]);",
-    "            else",
-    "                emailToAcc[email] = i;",
+    "    WordDictionary() { root = new Node(); }",
+    "    void addWord(string word) {",
+    "        Node* cur=root;",
+    "        for (char c:word) {",
+    "            if(!cur->ch[c-'a']) cur->ch[c-'a']=new Node();",
+    "            cur=cur->ch[c-'a'];",
     "        }",
+    "        cur->end=true;",
     "    }",
-    "    // Group emails by root account",
-    "    unordered_map<int, set<string>> groups;",
-    "    for (auto& [email, acc] : emailToAcc)",
-    "        groups[uf.find(acc)].insert(email);",
-    "    // Build result",
-    "    vector<vector<string>> result;",
-    "    for (auto& [root, emails] : groups) {",
-    "        vector<string> merged = {accounts[root][0]};  // account name",
-    "        merged.insert(merged.end(), emails.begin(), emails.end());",
-    "        result.push_back(merged);",
+    "    bool search(string word) {",
+    "        function<bool(Node*,int)> dfs=[&](Node* n, int i)->bool{",
+    "            if(i==(int)word.size()) return n->end;",
+    "            char c=word[i];",
+    "            if(c!='.') {",
+    "                return n->ch[c-'a'] && dfs(n->ch[c-'a'],i+1);",
+    "            }",
+    "            // Wildcard: try all children",
+    "            for(int j=0;j<26;j++)",
+    "                if(n->ch[j] && dfs(n->ch[j],i+1)) return true;",
+    "            return false;",
+    "        };",
+    "        return dfs(root,0);",
+    "    }",
+    "};",
+    "// search: O(26^wildcards * L) worst case",
+]))
+story.append(sp(0.8))
+
+story.append(h2("10.2  Replace Words  (LC 648)  — Medium"))
+story.append(body(
+    "Given a list of roots and a sentence, replace each word in the sentence with its shortest root. "
+    "Build Trie from roots. For each word, traverse Trie to find shortest prefix."
+))
+story.append(CppBlock([
+    "string replaceWords(vector<string>& dictionary, string sentence) {",
+    "    // Build Trie from roots",
+    "    struct Node { Node* ch[26]={}; bool isRoot=false; };",
+    "    Node* root = new Node();",
+    "    for (auto& r : dictionary) {",
+    "        Node* cur=root;",
+    "        for (char c:r) { if(!cur->ch[c-'a']) cur->ch[c-'a']=new Node();",
+    "                         cur=cur->ch[c-'a']; }",
+    "        cur->isRoot=true;",
+    "    }",
+    "    // Replace each word",
+    "    istringstream iss(sentence);",
+    "    string result, word;",
+    "    while (iss >> word) {",
+    "        if (!result.empty()) result += ' ';",
+    "        Node* cur=root; string prefix=\"\";",
+    "        bool replaced=false;",
+    "        for (char c:word) {",
+    "            if(!cur->ch[c-'a']) break;",
+    "            cur=cur->ch[c-'a']; prefix+=c;",
+    "            if(cur->isRoot) { result+=prefix; replaced=true; break; }",
+    "        }",
+    "        if(!replaced) result+=word;",
     "    }",
     "    return result;",
     "}",
-    "// Time: O(n*k*α(n))  k=avg emails per account   Space: O(n*k)",
+    "// Time: O(sum_roots + |sentence|)   Space: O(sum_root_lengths * 26)",
+]))
+story.append(sp(0.8))
+
+story.append(h2("10.3  Search Suggestions System  (LC 1268)  — Medium"))
+story.append(body(
+    "After each character typed, suggest up to 3 products with the matching prefix, lexicographically sorted. "
+    "Sort products first. For each prefix, find matching products using Trie or binary search."
+))
+story.append(CppBlock([
+    "// Binary search approach — simpler and same complexity",
+    "vector<vector<string>> suggestedProducts(",
+    "        vector<string>& products, string searchWord) {",
+    "    sort(products.begin(), products.end());",
+    "    vector<vector<string>> result;",
+    "    string prefix = \"\";",
+    "    for (char c : searchWord) {",
+    "        prefix += c;",
+    "        // Lower bound: first product >= prefix",
+    "        auto lo = lower_bound(products.begin(), products.end(), prefix);",
+    "        vector<string> suggestions;",
+    "        for (int i=0; i<3 && lo!=products.end(); i++, lo++) {",
+    "            // Check if still has this prefix",
+    "            if (lo->substr(0, prefix.size()) == prefix)",
+    "                suggestions.push_back(*lo);",
+    "            else break;",
+    "        }",
+    "        result.push_back(suggestions);",
+    "    }",
+    "    return result;",
+    "}",
+    "// Time: O(n log n + L * (log n + 3))   Space: O(L) for prefix string",
 ]))
 story.append(PageBreak())
 
 # ══════════════════════════════════════════════════════════════
-#  SECTION 10 — GRID PROBLEMS
+#  SECTION 11 — TRIE ADVANCED
 # ══════════════════════════════════════════════════════════════
-story.append(Banner("10","Grid Problems — BFS & DFS on 2D Arrays",GREEN,TEAL))
+story.append(Banner("11","Trie — Advanced Applications",NAVY,RED))
 story.append(sp(1))
 
-story.append(h2("10.1  4-Directional Grid Template"))
+story.append(h2("11.1  Maximum XOR of Two Numbers  (LC 421)  — Medium"))
+story.append(body(
+    "Find the maximum XOR of any two numbers in an array. "
+    "Build a binary Trie of all numbers (bit by bit from MSB to LSB). "
+    "For each number, greedily choose the opposite bit at each level to maximise XOR."
+))
 story.append(CppBlock([
-    "// Standard 4-directional movement template",
-    "int dr[] = {-1, 1, 0, 0};   // up, down, left, right",
-    "int dc[] = {0, 0, -1, 1};",
-    "",
-    "// In-bounds check",
-    "auto inBounds = [&](int r, int c) {",
-    "    return r >= 0 && r < rows && c >= 0 && c < cols;",
+    "// LC 421 — Maximum XOR of Two Numbers in an Array",
+    "struct XorTrieNode {",
+    "    XorTrieNode* ch[2] = {};",
     "};",
     "",
-    "// 8-directional (including diagonals)",
-    "int dr8[] = {-1,-1,-1,0,0,1,1,1};",
-    "int dc8[] = {-1, 0, 1,-1,1,-1,0,1};",
+    "int findMaximumXOR(vector<int>& nums) {",
+    "    XorTrieNode* root = new XorTrieNode();",
+    "    // Insert all numbers into binary Trie (bit 31 to bit 0)",
+    "    for (int x : nums) {",
+    "        XorTrieNode* cur = root;",
+    "        for (int i=31; i>=0; i--) {",
+    "            int bit = (x>>i) & 1;",
+    "            if (!cur->ch[bit]) cur->ch[bit] = new XorTrieNode();",
+    "            cur = cur->ch[bit];",
+    "        }",
+    "    }",
+    "    // For each number, query maximum XOR",
+    "    int ans = 0;",
+    "    for (int x : nums) {",
+    "        XorTrieNode* cur = root;",
+    "        int xorVal = 0;",
+    "        for (int i=31; i>=0; i--) {",
+    "            int bit = (x>>i) & 1;",
+    "            int want = 1-bit;          // want opposite bit for max XOR",
+    "            if (cur->ch[want]) {",
+    "                xorVal |= (1<<i);      // this bit of XOR = 1",
+    "                cur = cur->ch[want];",
+    "            } else {",
+    "                cur = cur->ch[bit];    // must take same bit",
+    "            }",
+    "        }",
+    "        ans = max(ans, xorVal);",
+    "    }",
+    "    return ans;",
+    "}",
+    "// Time: O(n * 32)   Space: O(n * 32)",
 ]))
 story.append(sp(0.8))
 
-story.append(h2("10.2  Surrounded Regions  (LC 130)  — Medium"))
+story.append(h2("11.2  Map Sum Pairs  (LC 677)  — Medium"))
 story.append(body(
-    "Capture all 'O' regions not connected to the border. "
-    "Key insight: instead of finding surrounded regions, find all 'O's connected to border "
-    "(these are NOT surrounded) and mark them safe. Then flip the rest."
+    "Insert key-value pairs. Find the sum of all values with keys starting with a given prefix. "
+    "Store the sum at each node of the prefix that contributes to it."
 ))
 story.append(CppBlock([
-    "void solve(vector<vector<char>>& board) {",
-    "    int m = board.size(), n = board[0].size();",
-    "    int dr[]={-1,1,0,0}, dc[]={0,0,-1,1};",
-    "    // BFS from all border 'O's to find safe cells",
-    "    queue<pair<int,int>> q;",
-    "    for (int r=0;r<m;r++) for(int c:{0,n-1})",
-    "        if(board[r][c]=='O'){board[r][c]='S';q.push({r,c});}",
-    "    for (int c=0;c<n;c++) for(int r:{0,m-1})",
-    "        if(board[r][c]=='O'){board[r][c]='S';q.push({r,c});}",
-    "    while (!q.empty()) {",
-    "        auto [r,c]=q.front();q.pop();",
-    "        for(int d=0;d<4;d++){",
-    "            int nr=r+dr[d],nc=c+dc[d];",
-    "            if(nr>=0&&nr<m&&nc>=0&&nc<n&&board[nr][nc]=='O'){",
-    "                board[nr][nc]='S'; q.push({nr,nc});",
-    "            }",
+    "// LC 677 — Map Sum Pairs",
+    "class MapSum {",
+    "    struct Node { Node* ch[26]={}; int val=0; };",
+    "    Node* root;",
+    "    unordered_map<string,int> map;   // store inserted values",
+    "public:",
+    "    MapSum() { root = new Node(); }",
+    "    void insert(string key, int val) {",
+    "        int delta = val - map[key];  // change in value (handles updates)",
+    "        map[key]  = val;",
+    "        Node* cur = root;",
+    "        for (char c : key) {",
+    "            if (!cur->ch[c-'a']) cur->ch[c-'a'] = new Node();",
+    "            cur = cur->ch[c-'a'];",
+    "            cur->val += delta;       // each node on path gets delta",
     "        }",
     "    }",
-    "    // Flip: 'O'→'X' (surrounded), 'S'→'O' (safe)",
-    "    for(int r=0;r<m;r++) for(int c=0;c<n;c++)",
-    "        board[r][c] = board[r][c]=='S' ? 'O' : 'X';",
-    "}",
-    "// Time: O(m*n)   Space: O(m*n)",
-]))
-story.append(sp(0.8))
-
-story.append(h2("10.3  Pacific Atlantic Water Flow  (LC 417)  — Medium"))
-story.append(body(
-    "Find cells from which water can flow to BOTH Pacific and Atlantic oceans. "
-    "Reverse approach: BFS from each ocean's border. "
-    "A cell is in the answer if it's reachable from both oceans."
-))
-story.append(CppBlock([
-    "vector<vector<int>> pacificAtlantic(vector<vector<int>>& h) {",
-    "    int m=h.size(), n=h[0].size();",
-    "    int dr[]={-1,1,0,0}, dc[]={0,0,-1,1};",
-    "    auto bfs=[&](queue<pair<int,int>> q)->vector<vector<bool>>{",
-    "        vector<vector<bool>> reach(m,vector<bool>(n,false));",
-    "        while(!q.empty()){",
-    "            auto[r,c]=q.front();q.pop();",
-    "            reach[r][c]=true;",
-    "            for(int d=0;d<4;d++){",
-    "                int nr=r+dr[d],nc=c+dc[d];",
-    "                if(nr>=0&&nr<m&&nc>=0&&nc<n&&!reach[nr][nc]",
-    "                   &&h[nr][nc]>=h[r][c]){  // water flows UP in reverse",
-    "                    reach[nr][nc]=true; q.push({nr,nc});",
-    "                }",
-    "            }",
+    "    int sum(string prefix) {",
+    "        Node* cur = root;",
+    "        for (char c : prefix) {",
+    "            if (!cur->ch[c-'a']) return 0;",
+    "            cur = cur->ch[c-'a'];",
     "        }",
-    "        return reach;",
-    "    };",
-    "    queue<pair<int,int>> pac,atl;",
-    "    for(int i=0;i<m;i++){pac.push({i,0});  atl.push({i,n-1});}",
-    "    for(int j=0;j<n;j++){pac.push({0,j});  atl.push({m-1,j});}",
-    "    auto rp=bfs(pac), ra=bfs(atl);",
-    "    vector<vector<int>> res;",
-    "    for(int r=0;r<m;r++) for(int c=0;c<n;c++)",
-    "        if(rp[r][c]&&ra[r][c]) res.push_back({r,c});",
-    "    return res;",
-    "}",
-    "// Time: O(m*n)   Space: O(m*n)",
-]))
-story.append(PageBreak())
-
-# ══════════════════════════════════════════════════════════════
-#  SECTION 11 — SHORTEST PATH
-# ══════════════════════════════════════════════════════════════
-story.append(Banner("11","Shortest Path Algorithms",RED,TEAL))
-story.append(sp(1))
-
-story.append(h2("11.1  Dijkstra's Algorithm — Weighted, Non-negative Edges"))
-story.append(body(
-    "Greedy shortest-path algorithm using a min-priority queue. "
-    "At each step, extract the unvisited vertex with minimum tentative distance and relax its edges. "
-    "<b>Does NOT work with negative edge weights.</b>"
-))
-story.append(CppBlock([
-    "#include <queue>",
-    "",
-    "vector<int> dijkstra(int src, vector<vector<pair<int,int>>>& adj) {",
-    "    int n = adj.size();",
-    "    vector<int> dist(n, INT_MAX);",
-    "    // min-heap: {distance, node}",
-    "    priority_queue<pair<int,int>,vector<pair<int,int>>,greater<>> pq;",
-    "    dist[src] = 0;",
-    "    pq.push({0, src});",
-    "    while (!pq.empty()) {",
-    "        auto [d, u] = pq.top(); pq.pop();",
-    "        if (d > dist[u]) continue;   // stale entry — skip",
-    "        for (auto [v, w] : adj[u]) {",
-    "            if (dist[u] + w < dist[v]) {",
-    "                dist[v] = dist[u] + w;",
-    "                pq.push({dist[v], v});",
-    "            }",
-    "        }",
+    "        return cur->val;             // sum of all values with this prefix",
     "    }",
-    "    return dist;   // dist[i] = shortest distance from src to i",
-    "}",
-    "// Time: O((V+E) log V)   Space: O(V)",
-    "// LC 743 Network Delay Time, LC 1514 Path with Max Probability",
-]))
-story.append(sp(0.8))
-
-story.append(h2("11.2  Bellman-Ford — Handles Negative Edges"))
-story.append(body(
-    "Relax ALL edges V-1 times. Each iteration guarantees shortest paths using at most k edges after k iterations. "
-    "Run one more pass: if any distance still decreases → negative cycle detected."
-))
-story.append(CppBlock([
-    "// Edge list format: {u, v, weight}",
-    "vector<int> bellmanFord(int src, int n,",
-    "                         vector<tuple<int,int,int>>& edges) {",
-    "    vector<int> dist(n, INT_MAX);",
-    "    dist[src] = 0;",
-    "    // Relax all edges V-1 times",
-    "    for (int iter = 0; iter < n-1; iter++) {",
-    "        for (auto& [u, v, w] : edges) {",
-    "            if (dist[u] != INT_MAX && dist[u]+w < dist[v])",
-    "                dist[v] = dist[u]+w;",
-    "        }",
-    "    }",
-    "    // Check for negative cycles",
-    "    for (auto& [u, v, w] : edges)",
-    "        if (dist[u] != INT_MAX && dist[u]+w < dist[v])",
-    "            return {};   // negative cycle exists",
-    "    return dist;",
-    "}",
-    "// Time: O(V*E)   Space: O(V)",
-    "// LC 787 Cheapest Flights Within K Stops (Bellman-Ford with k iterations)",
+    "};",
+    "// insert: O(L)   sum: O(L)   Space: O(total_key_length * 26)",
 ]))
 story.append(PageBreak())
 
 # ══════════════════════════════════════════════════════════════
 #  SECTION 12 — CHEAT SHEET
 # ══════════════════════════════════════════════════════════════
-story.append(Banner("12","Complexity Cheat Sheet & LeetCode Map",NAVY,TEAL))
+story.append(Banner("12","Complexity Cheat Sheet & LeetCode Map",NAVY,RED))
 story.append(sp(1))
 
-story.append(h2("12.1  Algorithm Complexity Summary"))
-cx_data=[
-    ["Algorithm",            "Time",          "Space",   "Key Condition / Notes"],
-    ["BFS",                   "O(V+E)",        "O(V)",    "Shortest path (unweighted), level-order"],
-    ["DFS",                   "O(V+E)",        "O(V)",    "Component detection, cycle, topo sort"],
-    ["Multi-source BFS",      "O(V+E)",        "O(V)",    "Push all sources first"],
-    ["0-1 BFS",               "O(V+E)",        "O(V)",    "Edge weights 0 or 1 only"],
-    ["Topological Sort",      "O(V+E)",        "O(V)",    "DAG only (Kahn's or DFS post-order)"],
-    ["Cycle Detection",       "O(V+E)",        "O(V)",    "3-colour for directed, parent for undirected"],
-    ["SCC (Kosaraju)",        "O(V+E)",        "O(V+E)", "Two DFS passes + transpose"],
-    ["Union-Find (optimised)","O(α(n)) each",  "O(n)",   "Path compression + union by rank"],
-    ["Dijkstra",              "O((V+E) log V)","O(V)",   "Non-negative weights only"],
-    ["Bellman-Ford",          "O(V*E)",        "O(V)",   "Handles negative weights, detects neg cycles"],
-    ["Floyd-Warshall",        "O(V³)",         "O(V²)",  "All-pairs shortest path, dense graphs"],
-    ["Prim's MST",            "O((V+E) log V)","O(V)",   "Min-heap based"],
-    ["Kruskal's MST",         "O(E log E)",    "O(V)",   "Sort edges + Union-Find"],
+story.append(h2("12.1  Backtracking Complexity Summary"))
+bt_data = [
+    ["Problem Type",              "Time Complexity",   "Space",    "Pruning Key"],
+    ["Subsets of n elements",     "O(n * 2^n)",        "O(n)",     "Sort + skip dup at same level"],
+    ["Permutations (distinct)",   "O(n * n!)",         "O(n)",     "used[] array prevents reuse"],
+    ["Permutations (duplicates)", "O(n * n!)",         "O(n)",     "Sort + skip if !used[i-1] & dup"],
+    ["Combinations nCk",          "O(k * C(n,k))",    "O(k)",     "start index avoids reversed dups"],
+    ["Combination Sum",           "O(n^(T/M))",       "O(T/M)",   "Sort + break if cand > remaining"],
+    ["N-Queens",                  "O(n!)",             "O(n)",     "Bitmask O(1) conflict check"],
+    ["Sudoku Solver",             "O(9^empty)",        "O(1)",     "Bitmask available digits"],
+    ["Palindrome Partition",      "O(n * 2^n)",        "O(n^2)",   "Precompute isPalin table"],
+    ["Word Search I",             "O(m*n * 4^L)",     "O(L)",     "In-place visited marking"],
+    ["Word Search II (Trie)",     "O(m*n * 4^L)",     "O(W*L)",   "Trie guides DFS, prune no-prefix"],
 ]
-cx_extra=[]
-for i in range(1,len(cx_data)):
-    v=cx_data[i][1]
-    col=GREEN if "(V+E)" in v and "log" not in v else \
-        (ORANGE if "log" in v else (RED if "V³" in v or "V*E" in v else DARK))
-    cx_extra+=[("TEXTCOLOR",(1,i),(1,i),col),("FONTNAME",(1,i),(1,i),"Helvetica-Bold")]
-story.append(mtbl(cx_data,[42*mm,30*mm,20*mm,76*mm],extra=cx_extra))
-story.append(cap("Table 2: Graph algorithm complexities"))
+story.append(mtbl(bt_data,[50*mm,30*mm,16*mm,62*mm]))
+story.append(cap("Table 1: Backtracking complexity summary"))
 story.append(sp(0.5))
 
-story.append(h2("12.2  Algorithm Selection Guide"))
+story.append(h2("12.2  Trie Complexity Summary"))
+trie_data = [
+    ["Operation",         "Time",    "Space",          "Notes"],
+    ["Insert word",       "O(L)",    "O(L * Σ)",       "Σ = alphabet size (26 for lowercase)"],
+    ["Search word",       "O(L)",    "O(1)",           "Exact match"],
+    ["Prefix search",     "O(L)",    "O(1)",           "startsWith"],
+    ["Delete word",       "O(L)",    "O(L)",           "Recursive cleanup"],
+    ["Count words",       "O(W*L)",  "O(W*L)",         "Build then query"],
+    ["Wildcard search",   "O(26^w*L)","O(L)",          "w = number of wildcards"],
+    ["XOR Trie insert",   "O(32)",   "O(32*n)",        "32-bit integers"],
+    ["XOR Trie query",    "O(32)",   "O(1)",           "Greedy opposite bit"],
+    ["Space (array)",     "—",       "O(Σ * W * avgL)","Array of children pointers"],
+    ["Space (hashmap)",   "—",       "O(W * avgL)",    "HashMap children; slower access"],
+]
+story.append(mtbl(trie_data,[30*mm,22*mm,26*mm,80*mm]))
+story.append(cap("Table 2: Trie operations complexity (L=word length, W=number of words)"))
+story.append(sp(0.5))
+
+story.append(h2("12.3  Pattern Decision Guide"))
 story.append(CppBlock([
     "/*",
-    " * PROBLEM SIGNAL                           → ALGORITHM",
+    " * PROBLEM SIGNAL                             → APPROACH",
     " * ─────────────────────────────────────────────────────────────────────",
-    " * Shortest path (unweighted graph)         → BFS",
-    " * Shortest path (non-negative weights)     → Dijkstra",
-    " * Shortest path (negative weights)         → Bellman-Ford",
-    " * All-pairs shortest path                  → Floyd-Warshall",
-    " * Minimum spanning tree                    → Prim's / Kruskal's + UF",
-    " * Connected components                     → BFS/DFS or Union-Find",
-    " * Cycle detection (undirected)             → DFS + parent, or UF",
-    " * Cycle detection (directed)               → DFS 3-colour (white/grey/black)",
-    " * Topological ordering                     → Kahn's BFS or DFS post-order",
-    " * Strongly connected components            → Kosaraju / Tarjan",
-    " * Bipartite check                          → BFS/DFS 2-colouring",
-    " * Dynamic connectivity (online merges)     → Union-Find",
-    " * Grid flood fill / island count           → BFS/DFS 4-directional",
-    " * Shortest path with exactly k edges       → Bellman-Ford k iterations",
-    " * Path with maximum probability            → Dijkstra (negate log probs)",
-    " * Articulation points & bridges            → Tarjan DFS low-link values",
+    " * Generate all subsets                       → Backtracking (include/exclude)",
+    " * Generate all permutations                  → Backtracking + used[] array",
+    " * Generate all combinations                  → Backtracking with start index",
+    " * Find all solutions satisfying constraint   → Backtracking + pruning",
+    " * Constraint satisfaction (Sudoku, N-Queens) → Backtracking + bitmask pruning",
+    " * Path-finding in 2D grid                   → DFS backtracking with in-place mark",
+    " * Multiple words in grid                     → Trie + DFS backtracking",
+    " * Prefix search / autocomplete               → Trie",
+    " * Replace words with shortest root           → Trie (prefix query)",
+    " * Count strings with prefix                  → Trie with counts at each node",
+    " * Wildcard matching over dictionary          → Trie with DFS for '.'",
+    " * Maximum XOR of two numbers                 → Binary Trie (greedy opposite bit)",
+    " * Duplicate subsets/permutations             → Sort + skip dup at same level",
+    " * Deduplication with sets                    → Sort first, then skip == prev",
     " */",
 ]))
 story.append(sp(0.5))
 
-story.append(h2("12.3  Complete LeetCode Problem Map"))
-lc_data=[
-    ["#",   "Problem",                                   "Algorithm",                  "Diff"],
-    ["127", "Word Ladder",                                "BFS word graph",             "Hard"],
-    ["130", "Surrounded Regions",                         "BFS from border",            "Medium"],
-    ["200", "Number of Islands",                          "BFS/DFS grid",               "Medium"],
-    ["207", "Course Schedule",                            "Kahn's topo sort",           "Medium"],
-    ["210", "Course Schedule II",                         "Kahn's topo sort",           "Medium"],
-    ["261", "Graph Valid Tree",                           "Union-Find / DFS",           "Medium"],
-    ["269", "Alien Dictionary",                           "Topo sort BFS",              "Hard"],
-    ["286", "Walls and Gates",                            "Multi-source BFS",           "Medium"],
-    ["310", "Minimum Height Trees",                       "Topo sort (trim leaves)",    "Medium"],
-    ["323", "Number of Connected Components",             "DFS / Union-Find",           "Medium"],
-    ["399", "Evaluate Division",                          "BFS weighted graph",         "Medium"],
-    ["417", "Pacific Atlantic Water Flow",                "BFS from both oceans",       "Medium"],
-    ["433", "Minimum Genetic Mutation",                   "BFS",                        "Medium"],
-    ["547", "Number of Provinces",                        "DFS / Union-Find",           "Medium"],
-    ["684", "Redundant Connection",                       "Union-Find cycle detect",    "Medium"],
-    ["695", "Max Area of Island",                         "DFS grid",                   "Medium"],
-    ["721", "Accounts Merge",                             "Union-Find + HashMap",       "Medium"],
-    ["743", "Network Delay Time",                         "Dijkstra",                   "Medium"],
-    ["785", "Is Graph Bipartite?",                        "BFS 2-colouring",            "Medium"],
-    ["787", "Cheapest Flights Within K Stops",            "Bellman-Ford k iters",       "Medium"],
-    ["802", "Find Eventual Safe States",                  "DFS / Kahn's reverse",       "Medium"],
-    ["994", "Rotting Oranges",                            "Multi-source BFS",           "Medium"],
-    ["1091","Shortest Path in Binary Matrix",             "BFS",                        "Medium"],
-    ["1202","Smallest String With Swaps",                 "Union-Find groups",          "Medium"],
-    ["1319","Number of Operations to Connect Network",    "Union-Find",                 "Medium"],
-    ["1584","Min Cost to Connect All Points",             "Kruskal / Prim MST",         "Medium"],
-    ["1631","Path With Minimum Effort",                   "Dijkstra / Binary Search",   "Medium"],
+story.append(h2("12.4  LeetCode Problem Map"))
+lc_data = [
+    ["#",   "Problem",                               "Pattern",                    "Diff"],
+    ["17",  "Letter Combinations of Phone Number",    "Backtracking",               "Medium"],
+    ["22",  "Generate Parentheses",                   "Backtracking + validity",    "Medium"],
+    ["37",  "Sudoku Solver",                          "Backtracking + bitmask",     "Hard"],
+    ["39",  "Combination Sum",                        "BT + unlimited reuse",       "Medium"],
+    ["40",  "Combination Sum II",                     "BT + skip duplicates",       "Medium"],
+    ["46",  "Permutations",                           "BT + used[] array",          "Medium"],
+    ["47",  "Permutations II",                        "BT + !used[i-1] skip",       "Medium"],
+    ["51",  "N-Queens",                               "BT + diag sets",             "Hard"],
+    ["52",  "N-Queens II",                            "BT + bitmask optimization",  "Hard"],
+    ["77",  "Combinations",                           "BT with start index",        "Medium"],
+    ["78",  "Subsets",                                "BT include/exclude",         "Medium"],
+    ["79",  "Word Search",                            "DFS + backtrack in grid",    "Medium"],
+    ["90",  "Subsets II",                             "BT + skip dup same level",   "Medium"],
+    ["93",  "Restore IP Addresses",                   "BT + pruning",               "Medium"],
+    ["131", "Palindrome Partitioning",                "BT + isPalin table",         "Medium"],
+    ["212", "Word Search II",                         "Trie + DFS backtracking",    "Hard"],
+    ["208", "Implement Trie",                         "Trie insert/search/prefix",  "Medium"],
+    ["211", "Design Add and Search Words",            "Trie + DFS wildcard",        "Medium"],
+    ["421", "Maximum XOR of Two Numbers in Array",    "Binary Trie",                "Medium"],
+    ["472", "Concatenated Words",                     "Trie + DP",                  "Hard"],
+    ["588", "Design In-Memory File System",           "Trie",                       "Hard"],
+    ["648", "Replace Words",                          "Trie prefix replacement",    "Medium"],
+    ["677", "Map Sum Pairs",                          "Trie with prefix sum",       "Medium"],
+    ["1268","Search Suggestions System",              "Trie / Binary Search",       "Medium"],
 ]
 dc={"Easy":GREEN,"Medium":ORANGE,"Hard":RED}
 le=[]
 for i,r in enumerate(lc_data[1:],1):
     col=dc.get(r[3],DARK)
     le+=[("TEXTCOLOR",(3,i),(3,i),col),("FONTNAME",(3,i),(3,i),"Helvetica-Bold")]
-story.append(mtbl(lc_data,[13*mm,70*mm,50*mm,15*mm],extra=le))
-story.append(cap("Table 3: 26 LeetCode problems — Graphs: BFS, DFS & Union-Find"))
+story.append(mtbl(lc_data,[13*mm,68*mm,48*mm,19*mm],extra=le))
+story.append(cap("Table 3: 23 LeetCode problems — Backtracking & Trie"))
 story.append(sp(0.8))
 
 story.append(InfoBox([
-    "1.  BFS = shortest path in unweighted graphs. DFS = deep exploration, cycle, topo, components.",
-    "2.  Always mark visited BEFORE enqueuing in BFS (not after dequeuing) to prevent duplicates.",
-    "3.  For directed cycle detection: use 3-colours (white/grey/black). Grey = currently in stack = cycle.",
-    "4.  Topological sort only works on DAGs. Kahn's detects cycles: if output size < V → cycle exists.",
-    "5.  Union-Find: path compression + union by rank → O(α(n)) per operation — essentially O(1).",
-    "6.  Dijkstra requires non-negative weights. Negative weights → Bellman-Ford.",
-    "7.  Multi-source BFS: push ALL sources initially. BFS naturally computes dist from nearest source.",
-    "8.  0-1 BFS: weight=0 → push_front (deque), weight=1 → push_back. O(V+E) vs O((V+E) log V).",
-    "9.  Grid problems: store visited state IN the grid (mark as visited) to save O(m*n) extra space.",
-    "10. SCC: Kosaraju needs two DFS passes + graph transpose. Simpler: check if reverse graph agrees.",
-],title="🏆 Golden Rules — Graphs: BFS, DFS & Union-Find",color=NAVY,bg=LIGHT))
+    "1.  Backtracking = DFS on decision tree. CHOOSE → EXPLORE → UNCHOOSE. Always restore state.",
+    "2.  Deduplication: SORT the input first. Skip if i > start && nums[i] == nums[i-1].",
+    "3.  Permutations vs Combinations: Permutations use used[] (no start). Combinations use start (no used[]).",
+    "4.  Combination Sum reuse: pass i (same index). No reuse: pass i+1.",
+    "5.  N-Queens bitmask: avail = ~(cols|d1|d2) & full. Pick lowest bit: bit = avail & (-avail).",
+    "6.  Pruning is EVERYTHING in backtracking. Sort + break when candidate exceeds remaining = huge speedup.",
+    "7.  Word Search II: build Trie from word list. DFS uses Trie node to guide search and prune dead branches.",
+    "8.  Trie insert/search: O(L) per operation. Never O(n) — independent of number of stored words.",
+    "9.  XOR Trie: build bit-by-bit from MSB. For max XOR, greedily choose opposite bit if available.",
+    "10. In-place visited marking (board[r][c]='#'): saves O(m*n) extra space vs a separate visited array.",
+], title="🏆 Golden Rules — Backtracking & Trie", color=NAVY, bg=LIGHT))
 
 # ── BUILD ───────────────────────────────────────────────────────
-out = "DSA_Notes_Graphs_BFS_DFS_UnionFind.pdf"
+out = "DSA_Notes_Backtracking_Trie.pdf"
 doc = SimpleDocTemplate(
     out, pagesize=A4,
     leftMargin=15*mm, rightMargin=15*mm,
-    topMargin=34*mm, bottomMargin=18*mm,
-    title="DSA Notes — Graphs: BFS, DFS & Union-Find",
+    topMargin=34*mm,  bottomMargin=18*mm,
+    title="DSA Notes — Backtracking & Trie",
     author="DSA Revision Planner",
-    subject="Complete Graph BFS DFS Union-Find Notes with C++",
+    subject="Complete Backtracking and Trie Notes with C++",
 )
 doc.build(story, onFirstPage=first_page, onLaterPages=later_pages)
 print(f"\n✅  Done!  →  {out}")
